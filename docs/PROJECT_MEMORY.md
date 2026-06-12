@@ -229,7 +229,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 11 — Presentation polish
-**Commit:** *(pending)* — *Phase 11: HUD polish, VFX feedback, and screen UX.*
+**Commit:** `5040149` — *Phase 11: HUD polish, VFX feedback, and screen UX.*
 
 **Built:**
 - HUD readability: vignettes for low health / breach danger, pulsing danger bars, combo tier highlight
@@ -333,7 +333,7 @@ input → turret → firing → entities.update → flying drops
 | `c1217ed` | 2026-06-12 | Phase 9 — tiered upgrade system |
 | `dc9a092` | 2026-06-12 | Phase 10 — enemy variety, wave composition, scaling |
 | `a0b277c` | 2026-06-12 | Project memory update for Phase 10 |
-| *(pending)* | 2026-06-12 | Phase 11 — presentation polish |
+| `5040149` | 2026-06-12 | Phase 11 — presentation polish |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
