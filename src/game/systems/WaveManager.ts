@@ -7,6 +7,8 @@ export interface SpawnModifiers {
   speedMultiplier: number;
   healthMultiplier: number;
   scoreMultiplier: number;
+  dropIntervalScale: number;
+  maxDropsBonus: number;
 }
 
 export type SpawnCallback = (
@@ -105,6 +107,8 @@ export class WaveManager {
         speedMultiplier: this.scaling.speedMultiplier,
         healthMultiplier: this.scaling.healthMultiplier,
         scoreMultiplier: this.scaling.scoreMultiplier,
+        dropIntervalScale: this.scaling.dropIntervalScale,
+        maxDropsBonus: this.scaling.maxDropsBonus,
       });
       this.spawnIndex += 1;
     }

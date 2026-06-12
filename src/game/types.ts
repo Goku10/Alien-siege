@@ -25,9 +25,15 @@ export type GameScreen =
   | 'bossWarning'
   | 'gameOver';
 
-export type EnemyTypeId = 'scout_saucer' | 'drop_carrier' | 'bomber_ship';
+export type EnemyTypeId =
+  | 'scout_saucer'
+  | 'drop_carrier'
+  | 'bomber_ship'
+  | 'shielded_transport'
+  | 'drone_swarm_pod'
+  | 'elite_bio_pod';
 
-export type GroundEnemyTypeId = 'crawler' | 'spitter' | 'leaper';
+export type GroundEnemyTypeId = 'crawler' | 'spitter' | 'leaper' | 'brood_guard';
 
 export type GroundEnemyBehavior = 'approaching' | 'breaching' | 'attacking';
 
@@ -159,6 +165,10 @@ export interface EnemyState {
   flashTimer: number;
   dropTimer: number;
   dropsReleased: number;
+  dropInterval: number;
+  maxDrops: number;
+  shieldHealth: number;
+  maxShieldHealth: number;
 }
 
 export interface BombState {

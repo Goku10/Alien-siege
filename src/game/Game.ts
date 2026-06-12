@@ -130,7 +130,9 @@ export class Game {
       },
       onCombatStart: (level) => {
         this.economy.beginLevel();
-        this.waves.startLevel(level, this.levels.getScaling());
+        const scaling = this.levels.getScaling();
+        this.threats.setLevelContext(level.id, scaling);
+        this.waves.startLevel(level, scaling);
       },
       onBossWarning: () => {
         this.entities.clearThreats();

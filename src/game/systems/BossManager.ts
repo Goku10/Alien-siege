@@ -162,6 +162,8 @@ export class BossManager {
         speedMultiplier: 1.1 + boss.phase * 0.08,
         healthMultiplier: 1,
         scoreMultiplier: 1,
+        dropIntervalScale: 1,
+        maxDropsBonus: 0,
       });
       enemy.x = boss.x + (i - count / 2) * 30;
     }

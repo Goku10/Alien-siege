@@ -52,6 +52,20 @@ export function spawnGroundEnemy(
   return g;
 }
 
+export interface GroundSpawnModifiers {
+  speedMultiplier: number;
+  healthMultiplier: number;
+}
+
+export function applyGroundModifiers(
+  g: GroundEnemyState,
+  mods: GroundSpawnModifiers,
+): void {
+  g.vx *= mods.speedMultiplier;
+  g.health = Math.ceil(g.health * mods.healthMultiplier);
+  g.maxHealth = g.health;
+}
+
 export function damageGroundEnemy(g: GroundEnemyState, amount: number): void {
   g.health -= amount;
   g.flashTimer = 0.1;

@@ -64,22 +64,25 @@ src/
 | `src/game/data/balancing.ts` | Global constants (canvas size, base health, combo, waves) |
 | `src/game/data/turretConfig.ts` | Turret rotation + Machine Gun weapon stats |
 | `src/game/data/enemies.ts` | Enemy type definitions (HP, speed, patterns, score) |
+| `src/game/data/waveCompositions.ts` | Data-driven wave blueprints per level |
+| `src/game/data/levelScaling.ts` | Per-level difficulty multipliers |
 | `src/game/data/levels.ts` | Level wave schedules and bonuses |
 | `src/game/data/credits.ts` | Credit earn rates (kills, waves, boss, bonuses) |
 | `src/game/data/shopItems.ts` | Shop catalog + tiered upgrade chains |
 | `src/game/data/upgradeEffects.ts` | Upgrade effect field definitions |
 | `src/game/data/weapons.ts` | Weapon definitions for shop loadout |
 
-## Current Status — Phase 9 Complete
+## Current Status — Phase 10 Complete
 
-- [x] Phases 1–8: Campaign, shop, credits, five weapon types
-- [x] **Tiered upgrades** — 3-tier chains for core stats, 2-tier for specialist bonuses
-- [x] Effects: damage, fire rate, cooling, reload, splash, HP, shield, breach, bomb resist, combo, cooldown
-- [x] Shop shows tier labels + before → after stat preview on purchasable items
+- [x] Phases 1–9: Campaign, shop, credits, five weapons, tiered upgrades
+- [x] **6 flying enemy types** — scouts, carriers, bombers, shielded transports, swarm pods, elite bio-pods
+- [x] **4 ground enemy types** — crawler, spitter, leaper, brood guard
+- [x] Data-driven wave blueprints with distinct compositions per level
+- [x] Level scaling for speed, health, drop aggression, and ground unit stats
 
 ### Next Phases
 
-- Phase 10: Polish (particles, audio hooks, balance pass)
+- Phase 11: Polish (particles, audio hooks, balance pass)
 
 ## License
 

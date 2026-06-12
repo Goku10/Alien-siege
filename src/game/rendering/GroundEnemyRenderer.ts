@@ -21,6 +21,9 @@ export class GroundEnemyRenderer {
         case 'leaper':
           this.drawLeaper(ctx, g.radius, def.color, def.accentColor, flash);
           break;
+        case 'brood_guard':
+          this.drawBroodGuard(ctx, g.radius, def.color, def.accentColor, flash);
+          break;
       }
 
       if (g.health < g.maxHealth) {
@@ -98,5 +101,34 @@ export class GroundEnemyRenderer {
     ctx.beginPath();
     ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  private drawBroodGuard(
+    ctx: CanvasRenderingContext2D,
+    r: number,
+    color: string,
+    accent: string,
+    flash: boolean,
+  ): void {
+    ctx.fillStyle = flash ? '#fff' : color;
+    ctx.beginPath();
+    ctx.roundRect(-r * 1.05, -r * 0.65, r * 2.1, r * 1.3, r * 0.25);
+    ctx.fill();
+
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-r * 0.85, -r * 0.5, r * 1.7, r * 1.0);
+
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.arc(0, -r * 0.15, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = -1; i <= 1; i += 2) {
+      ctx.fillStyle = flash ? '#fff' : color;
+      ctx.beginPath();
+      ctx.ellipse(i * r * 0.75, r * 0.45, r * 0.28, r * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }

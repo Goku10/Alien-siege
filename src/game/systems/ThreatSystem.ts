@@ -1,7 +1,9 @@
 import { BALANCING } from '../data/balancing';
-import { ENEMY_DEFINITIONS } from '../data/enemies';
+import { ENEMY_DEFINITIONS, getPodPayloadForEnemy } from '../data/enemies';
 import { pickPodPayload } from '../data/groundEnemies';
+import type { LevelScaling } from '../data/levelScaling';
 import { canEnemyDrop, tickEnemyDrop } from '../entities/Enemy';
+import type { GroundSpawnModifiers } from '../entities/GroundEnemy';
 import type { EntityManager } from './EntityManager';
 import type { BaseDefenseSystem } from './BaseDefenseSystem';
 import type { EffectsManager } from './EffectsManager';
@@ -12,10 +14,27 @@ export class ThreatSystem {
   bombWarningActive = false;
   private bombDamageReduction = 0;
   private breachRateMultiplier = 1;
+  private levelId = 1;
+  private groundMods: GroundSpawnModifiers = {
+    speedMultiplier: 1,
+    healthMultiplier: 1,
+  };
 
   setDefenseModifiers(bombDamageReduction: number, breachRateMultiplier: number): void {
     this.bombDamageReduction = Math.max(0, Math.min(0.9, bombDamageReduction));
     this.breachRateMultiplier = Math.max(0.1, breachRateMultiplier);
+  }
+
+  setLevelContext(levelId: number, scaling: LevelScaling): void {
+    this.levelId = levelId;
+    this.groundMods = {
+      speedMultiplier: scaling.groundSpeedMultiplier,
+      healthMultiplier: scaling.groundHealthMultiplier,
+    };
+  }
+
+  private resolvePodPayload(enemy: EnemyState) {
+    return getPodPayloadForEnemy(enemy.typeId) ?? pickPodPayload(this.levelId);
   }
 
   updateFlyingDrops(
@@ -36,7 +55,11 @@ export class ThreatSystem {
         entities.spawnBomb(enemy.x, enemy.y + enemy.radius);
         effects.spawnDropIndicator(enemy.x, enemy.y + enemy.radius, 'bomb');
       } else if (def.dropKind === 'pod') {
-        entities.spawnDropPod(enemy.x, enemy.y + enemy.radius, pickPodPayload());
+        entities.spawnDropPod(
+          enemy.x,
+          enemy.y + enemy.radius,
+          this.resolvePodPayload(enemy),
+        );
         effects.spawnDropIndicator(enemy.x, enemy.y + enemy.radius, 'pod');
       }
     }
@@ -81,7 +104,14 @@ export class ThreatSystem {
     });
 
     for (const pod of landedPods) {
-      entities.spawnGroundEnemy(pod.payload, pod.x, layout.walkY, boundsW, boundsH);
+      entities.spawnGroundEnemy(
+        pod.payload,
+        pod.x,
+        layout.walkY,
+        boundsW,
+        boundsH,
+        this.groundMods,
+      );
       effects.spawnExplosion(pod.x, pod.y, pod.radius, '#52b788');
       pod.active = false;
     }

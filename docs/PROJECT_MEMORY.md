@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 9 complete  
+**Current phase:** Phase 10 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -47,7 +47,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 7 | Between-level shop + upgrades | ✅ Done |
 | 8 | Multi-weapon arsenal (5 weapon types) | ✅ Done |
 | 9 | Tiered upgrade system (weapon/defense/special) | ✅ Done |
-| 10 | Polish — particles, audio hooks, balance pass | ⏳ Next |
+| 10 | Enemy variety, wave composition, level scaling | ✅ Done |
+| 11 | Polish — particles, audio hooks, balance pass | ⏳ Next |
 
 ---
 
@@ -206,7 +207,27 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 9)
+### Phase 10 — Enemy variety & scaling
+**Commit:** *(pending)* — *Phase 10: Enemy variety, data-driven waves, and level scaling.*
+
+**Built:**
+- **3 new flying types** (`enemies.ts`):
+  - Shielded Transport — front shield absorbs damage before hull; no drops
+  - Drone Swarm Pod — fast hex pod; rapid pod drops (level 2+)
+  - Elite Bio-Pod — drops Brood Guard ground units (level 3)
+- **1 new ground type:** Brood Guard — tanky, high breach pressure
+- `waveCompositions.ts` — blueprint-driven waves per level (11 compositions, distinct L1/L2/L3 profiles)
+- `levelScaling.ts` — speed/health/drop interval/max drops/ground stats scale by level
+- Shield damage pipeline in `damageEnemy()`; per-instance `dropInterval` / `maxDrops` on `EnemyState`
+- `ThreatSystem.setLevelContext()` — level-weighted pod payloads + scaled ground spawns
+- Renderers for new silhouettes; dual shield + hull health bars on shielded units
+- Credit rewards for all new enemy types
+
+**Intentionally deferred:** audio, extra particle polish, save/load.
+
+---
+
+## Current state (after Phase 10)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
@@ -249,8 +270,10 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | `src/game/data/credits.ts` | Credit rewards — kills, waves, level, boss, bonuses |
 | `src/game/data/shopItems.ts` | Shop catalog — costs, effects, categories |
 | `src/game/data/weapons.ts` | Weapon stat definitions |
-| `src/game/data/groundEnemies.ts` | Crawler/spitter/leaper stats |
-| `src/game/data/enemies.ts` | Flyer drops (interval, max drops) |
+| `src/game/data/waveCompositions.ts` | Per-level wave blueprints and enemy mix |
+| `src/game/data/levelScaling.ts` | Per-level spawn stat multipliers |
+| `src/game/data/groundEnemies.ts` | Ground stats + pod payload weights |
+| `src/game/data/enemies.ts` | Flyer stats, shields, drops, pod payloads |
 | `src/game/utils/baseLayout.ts` | Base/breach zone geometry |
 
 ### HUD fields (placeholders until later phases)
@@ -292,16 +315,17 @@ input → turret → firing → entities.update → flying drops
 | `8316102` | 2026-06-12 | Phase 7 — between-level armory shop |
 | `f320e2b` | 2026-06-12 | Phase 8 — multi-weapon arsenal |
 | `c1217ed` | 2026-06-12 | Phase 9 — tiered upgrade system |
+| *(pending)* | 2026-06-12 | Phase 10 — enemy variety, wave composition, scaling |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
 ---
 
-## Phase 10 preview (next work)
+## Phase 11 preview (next work)
 
 - [ ] Polish pass — particles, audio hooks, balance tuning
 
-**Config:** `shopItems.ts` + `upgradeEffects.ts` for tier costs/effects; `weapons.ts` for base stats.
+**Config:** `waveCompositions.ts` + `levelScaling.ts` for enemy mix/difficulty; `shopItems.ts` for economy.
 
 ---
 

@@ -1,6 +1,12 @@
 import { bombPool, spawnBomb, updateBomb } from '../entities/Bomb';
 import { dropPodPool, spawnDropPod, updateDropPod } from '../entities/DropPod';
-import { groundEnemyPool, spawnGroundEnemy, updateGroundEnemy } from '../entities/GroundEnemy';
+import {
+  applyGroundModifiers,
+  groundEnemyPool,
+  spawnGroundEnemy,
+  updateGroundEnemy,
+  type GroundSpawnModifiers,
+} from '../entities/GroundEnemy';
 import { applyEnemyModifiers, spawnEnemy, updateEnemy, type EnemySpawnModifiers } from '../entities/Enemy';
 import type { WeaponStats } from '../data/weapons';
 import { spawnWeaponProjectiles, updateProjectile } from '../entities/Projectile';
@@ -99,9 +105,11 @@ export class EntityManager {
     y: number,
     boundsW: number,
     boundsH: number,
+    modifiers?: GroundSpawnModifiers,
   ): GroundEnemyState {
     const layout = getBaseLayout(boundsW, boundsH);
     const g = spawnGroundEnemy(typeId, x, y, layout);
+    if (modifiers) applyGroundModifiers(g, modifiers);
     this.groundEnemies.push(g);
     return g;
   }

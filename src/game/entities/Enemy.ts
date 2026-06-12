@@ -27,6 +27,10 @@ function createEnemy(): EnemyState {
     flashTimer: 0,
     dropTimer: 0,
     dropsReleased: 0,
+    dropInterval: 0,
+    maxDrops: 0,
+    shieldHealth: 0,
+    maxShieldHealth: 0,
   };
 }
 
@@ -37,7 +41,7 @@ function resetEnemy(e: EnemyState): void {
   e.patternPhase = 0;
 }
 
-export const enemyPool = new ObjectPool(createEnemy, resetEnemy, 32);
+export const enemyPool = new ObjectPool(createEnemy, resetEnemy, 48);
 
 function randomSkyY(): number {
   const { skyYMin, skyYMax } = BALANCING.waves;
@@ -70,25 +74,27 @@ export function spawnEnemy(
   enemy.patternAmplitude = def.patternAmplitude;
   enemy.patternFrequency = def.patternFrequency;
   enemy.scoreValue = def.score;
-  enemy.dropTimer = def.dropInterval * 0.5;
+  enemy.dropInterval = def.dropInterval;
+  enemy.maxDrops = def.maxDrops;
+  enemy.dropTimer = enemy.dropInterval > 0 ? enemy.dropInterval * 0.45 : 0;
   enemy.dropsReleased = 0;
+  enemy.shieldHealth = def.shieldHealth ?? 0;
+  enemy.maxShieldHealth = enemy.shieldHealth;
   return enemy;
 }
 
 export function canEnemyDrop(enemy: EnemyState, boundsW: number): boolean {
-  const def = ENEMY_DEFINITIONS[enemy.typeId];
-  if (def.dropKind === 'none' || enemy.dropsReleased >= def.maxDrops) return false;
+  if (enemy.maxDrops <= 0 || enemy.dropsReleased >= enemy.maxDrops) return false;
   const minX = BALANCING.threats.dropMinX;
   const maxX = boundsW - BALANCING.threats.dropMaxOffsetFromEdge;
   return enemy.x >= minX && enemy.x <= maxX;
 }
 
 export function tickEnemyDrop(enemy: EnemyState, dt: number): boolean {
-  const def = ENEMY_DEFINITIONS[enemy.typeId];
-  if (def.dropKind === 'none' || enemy.dropsReleased >= def.maxDrops) return false;
+  if (enemy.maxDrops <= 0 || enemy.dropsReleased >= enemy.maxDrops) return false;
 
   enemy.dropTimer += dt;
-  if (enemy.dropTimer >= def.dropInterval) {
+  if (enemy.dropTimer >= enemy.dropInterval) {
     enemy.dropTimer = 0;
     enemy.dropsReleased += 1;
     return true;
@@ -136,14 +142,26 @@ export function updateEnemy(enemy: EnemyState, dt: number, boundsW: number): boo
 }
 
 export function damageEnemy(enemy: EnemyState, amount: number): void {
-  enemy.health -= amount;
   enemy.flashTimer = 0.1;
+  let remaining = amount;
+
+  if (enemy.shieldHealth > 0) {
+    const absorbed = Math.min(enemy.shieldHealth, remaining);
+    enemy.shieldHealth -= absorbed;
+    remaining -= absorbed;
+  }
+
+  if (remaining > 0) {
+    enemy.health -= remaining;
+  }
 }
 
 export interface EnemySpawnModifiers {
   speedMultiplier: number;
   healthMultiplier: number;
   scoreMultiplier: number;
+  dropIntervalScale: number;
+  maxDropsBonus: number;
 }
 
 export function applyEnemyModifiers(enemy: EnemyState, mods: EnemySpawnModifiers): void {
@@ -151,4 +169,16 @@ export function applyEnemyModifiers(enemy: EnemyState, mods: EnemySpawnModifiers
   enemy.health = Math.ceil(enemy.health * mods.healthMultiplier);
   enemy.maxHealth = enemy.health;
   enemy.scoreValue = Math.ceil(enemy.scoreValue * mods.scoreMultiplier);
+
+  if (enemy.maxShieldHealth > 0) {
+    enemy.shieldHealth = Math.ceil(enemy.maxShieldHealth * mods.healthMultiplier);
+    enemy.maxShieldHealth = enemy.shieldHealth;
+  }
+
+  if (enemy.dropInterval > 0) {
+    enemy.dropInterval = Math.max(0.8, enemy.dropInterval * mods.dropIntervalScale);
+  }
+  if (enemy.maxDrops > 0) {
+    enemy.maxDrops += mods.maxDropsBonus;
+  }
 }

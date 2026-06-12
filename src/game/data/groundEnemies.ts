@@ -15,6 +15,7 @@ export interface GroundEnemyDefinition {
   color: string;
   accentColor: string;
   shakeOnDeath: number;
+  minLevel: number;
 }
 
 export const GROUND_ENEMY_DEFINITIONS: Record<GroundEnemyTypeId, GroundEnemyDefinition> = {
@@ -33,6 +34,7 @@ export const GROUND_ENEMY_DEFINITIONS: Record<GroundEnemyTypeId, GroundEnemyDefi
     color: '#2d6a4f',
     accentColor: '#95d5b2',
     shakeOnDeath: 2,
+    minLevel: 1,
   },
   spitter: {
     id: 'spitter',
@@ -49,6 +51,7 @@ export const GROUND_ENEMY_DEFINITIONS: Record<GroundEnemyTypeId, GroundEnemyDefi
     color: '#7b2cbf',
     accentColor: '#e0aaff',
     shakeOnDeath: 2.5,
+    minLevel: 1,
   },
   leaper: {
     id: 'leaper',
@@ -65,19 +68,45 @@ export const GROUND_ENEMY_DEFINITIONS: Record<GroundEnemyTypeId, GroundEnemyDefi
     color: '#e85d04',
     accentColor: '#ffba08',
     shakeOnDeath: 3,
+    minLevel: 1,
+  },
+  brood_guard: {
+    id: 'brood_guard',
+    name: 'Brood Guard',
+    health: 52,
+    speed: 36,
+    radius: 17,
+    score: 210,
+    breachRate: 12,
+    breachBurst: 0,
+    attackDamage: 0,
+    attackInterval: 0,
+    attackRange: 0,
+    color: '#5c4d3c',
+    accentColor: '#d4a373',
+    shakeOnDeath: 3.5,
+    minLevel: 2,
   },
 };
 
-const POD_PAYLOAD_WEIGHTS: { type: GroundEnemyTypeId; weight: number }[] = [
-  { type: 'crawler', weight: 55 },
-  { type: 'leaper', weight: 30 },
-  { type: 'spitter', weight: 15 },
+interface PayloadWeight {
+  type: GroundEnemyTypeId;
+  weight: number;
+  minLevel: number;
+}
+
+const POD_PAYLOAD_WEIGHTS: PayloadWeight[] = [
+  { type: 'crawler', weight: 50, minLevel: 1 },
+  { type: 'leaper', weight: 28, minLevel: 1 },
+  { type: 'spitter', weight: 18, minLevel: 1 },
+  { type: 'brood_guard', weight: 22, minLevel: 2 },
 ];
 
-export function pickPodPayload(): GroundEnemyTypeId {
-  const total = POD_PAYLOAD_WEIGHTS.reduce((s, p) => s + p.weight, 0);
+export function pickPodPayload(levelId = 1): GroundEnemyTypeId {
+  const pool = POD_PAYLOAD_WEIGHTS.filter((entry) => entry.minLevel <= levelId);
+  const total = pool.reduce((sum, entry) => sum + entry.weight, 0);
   let roll = Math.random() * total;
-  for (const entry of POD_PAYLOAD_WEIGHTS) {
+  for (const entry of pool) {
     roll -= entry.weight;
     if (roll <= 0) return entry.type;
   }
