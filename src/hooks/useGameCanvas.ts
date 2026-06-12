@@ -20,6 +20,7 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   isBossFight: false,
   bossHealth: 0,
   bossMaxHealth: 0,
+  enemiesRemaining: 0,
 };
 
 export function useGameCanvas() {

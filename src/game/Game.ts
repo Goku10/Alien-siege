@@ -2,9 +2,13 @@ import { BALANCING } from './data/balancing';
 import { MACHINE_GUN } from './data/turretConfig';
 import { Turret } from './entities/Turret';
 import { Renderer } from './rendering/Renderer';
+import { CollisionSystem } from './systems/CollisionSystem';
+import { EconomyManager } from './systems/EconomyManager';
+import { EffectsManager } from './systems/EffectsManager';
 import { EntityManager } from './systems/EntityManager';
 import { GameLoop } from './systems/GameLoop';
 import { InputManager } from './systems/InputManager';
+import { WaveManager } from './systems/WaveManager';
 import type { GameScreen, GameSnapshot } from './types';
 
 export interface GameCallbacks {
@@ -19,6 +23,10 @@ export class Game {
   private loop: GameLoop;
   private renderer: Renderer;
   private entities: EntityManager;
+  private collision: CollisionSystem;
+  private economy: EconomyManager;
+  private effects: EffectsManager;
+  private waves: WaveManager;
   private turret: Turret;
   private callbacks: GameCallbacks;
 
@@ -28,10 +36,7 @@ export class Game {
   private shakeX = 0;
   private shakeY = 0;
 
-  private score = 0;
-  private credits = 0;
   private level = 1;
-  private wave = 0;
   private baseHealth = BALANCING.base.maxHealth;
   private breach = 0;
 
@@ -49,6 +54,19 @@ export class Game {
     this.input = new InputManager();
     this.renderer = new Renderer();
     this.entities = new EntityManager();
+    this.collision = new CollisionSystem();
+    this.economy = new EconomyManager();
+    this.effects = new EffectsManager();
+    this.waves = new WaveManager({
+      onSpawn: (typeId, side, y) => {
+        this.entities.spawnEnemy(typeId, side, width, y);
+      },
+      onWaveComplete: (_waveNum, clearBonus) => {
+        const bonus = this.economy.awardWaveClear(clearBonus);
+        this.effects.spawnScorePopup(width / 2, height * 0.35, `WAVE CLEAR +${bonus}`);
+        this.addScreenShake(3);
+      },
+    });
     this.turret = new Turret(width, height);
 
     this.loop = new GameLoop(
@@ -97,15 +115,15 @@ export class Game {
 
   resetSession(): void {
     this.elapsedTime = 0;
-    this.score = 0;
-    this.credits = 0;
     this.level = 1;
-    this.wave = 0;
     this.baseHealth = BALANCING.base.maxHealth;
     this.breach = 0;
     this.shakeIntensity = 0;
+    this.economy.reset();
+    this.effects.clear();
     this.entities.clear();
     this.turret = new Turret(BALANCING.canvas.width, BALANCING.canvas.height);
+    this.waves.start();
   }
 
   private update(dt: number): void {
@@ -126,8 +144,7 @@ export class Game {
     }
 
     const input = this.input.getState();
-    const canAimWithMouse = true;
-    this.turret.update(dt, input, canAimWithMouse);
+    this.turret.update(dt, input, true);
 
     const now = this.elapsedTime;
     if (this.turret.wantsToFire(input) && this.turret.canFire(now)) {
@@ -137,10 +154,27 @@ export class Game {
       this.turret.applyHeat();
       this.turret.markFired(now);
       this.addScreenShake(1.5);
-      // Audio hook: playGunFire()
     }
 
+    this.waves.update(dt, this.entities.getAliveEnemyCount());
+
+    this.collision.process(
+      this.entities.projectiles,
+      this.entities.enemies,
+      this.effects,
+      this.economy,
+      {
+        onScreenShake: (amount) => this.addScreenShake(amount),
+        onHit: () => {
+          // Audio hook: playHit()
+        },
+      },
+    );
+    this.entities.pruneProjectiles();
+
     this.entities.update(dt, BALANCING.canvas.width, BALANCING.canvas.height);
+    this.effects.update(dt);
+    this.economy.update(dt);
     this.decayShake(dt);
     this.emitSnapshot();
   }
@@ -165,7 +199,9 @@ export class Game {
     this.renderer.draw(this.ctx, width, height, {
       turret: this.turret.state,
       projectiles: this.entities.projectiles,
+      enemies: this.entities.enemies,
       muzzleFlashes: this.entities.muzzleFlashes,
+      effects: this.effects,
       shakeX: this.shakeX,
       shakeY: this.shakeY,
     });
@@ -173,15 +209,15 @@ export class Game {
 
   private emitSnapshot(): void {
     this.callbacks.onSnapshot?.({
-      score: this.score,
-      credits: this.credits,
+      score: this.economy.score,
+      credits: 0,
       level: this.level,
-      wave: this.wave,
+      wave: this.waves.getWaveNumber(),
       baseHealth: this.baseHealth,
       maxBaseHealth: BALANCING.base.maxHealth,
       breach: this.breach,
       maxBreach: BALANCING.base.maxBreach,
-      combo: 1,
+      combo: this.economy.getCombo(),
       weaponName: MACHINE_GUN.name,
       heat: this.turret.state.heat,
       maxHeat: this.turret.state.maxHeat,
@@ -190,6 +226,7 @@ export class Game {
       isBossFight: false,
       bossHealth: 0,
       bossMaxHealth: 0,
+      enemiesRemaining: this.entities.getAliveEnemyCount(),
     });
   }
 }

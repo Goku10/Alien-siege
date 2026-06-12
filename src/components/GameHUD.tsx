@@ -31,6 +31,12 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
           <span className="hud__label">WAVE</span>
           <span className="hud__value">{snapshot.wave || '—'}</span>
         </div>
+        {snapshot.combo > 1 && (
+          <div className="hud__stat hud__stat--combo">
+            <span className="hud__label">COMBO</span>
+            <span className="hud__value hud__value--combo">×{snapshot.combo}</span>
+          </div>
+        )}
       </div>
 
       <div className="hud__bottom">

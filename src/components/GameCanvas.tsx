@@ -28,7 +28,7 @@ export function GameCanvas() {
         <PauseOverlay onResume={resumeGame} onQuit={goToTitle} />
       )}
       {screen === 'playing' && (
-        <div className="prototype-badge">Phase 1 — Turret Prototype</div>
+        <div className="prototype-badge">Phase 2 — Combat Loop</div>
       )}
     </div>
   );

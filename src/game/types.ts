@@ -25,6 +25,12 @@ export type GameScreen =
   | 'bossWarning'
   | 'gameOver';
 
+export type EnemyTypeId = 'scout_saucer' | 'drop_carrier' | 'bomber_ship';
+
+export type MovementPattern = 'straight' | 'sine' | 'arc' | 'bob';
+
+export type SpawnSide = 'left' | 'right';
+
 export interface InputState {
   mouseX: number;
   mouseY: number;
@@ -63,6 +69,59 @@ export interface ProjectileState {
   trail: Vector2[];
 }
 
+export interface EnemyState {
+  id: number;
+  typeId: EnemyTypeId;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  health: number;
+  maxHealth: number;
+  radius: number;
+  active: boolean;
+  side: SpawnSide;
+  pattern: MovementPattern;
+  patternPhase: number;
+  patternAmplitude: number;
+  patternFrequency: number;
+  baseY: number;
+  scoreValue: number;
+  flashTimer: number;
+}
+
+export interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  radius: number;
+  color: string;
+  active: boolean;
+}
+
+export interface Explosion {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  life: number;
+  maxLife: number;
+  color: string;
+  active: boolean;
+}
+
+export interface ScorePopup {
+  x: number;
+  y: number;
+  text: string;
+  life: number;
+  maxLife: number;
+  active: boolean;
+}
+
 export interface MuzzleFlash {
   x: number;
   y: number;
@@ -90,4 +149,5 @@ export interface GameSnapshot {
   isBossFight: boolean;
   bossHealth: number;
   bossMaxHealth: number;
+  enemiesRemaining: number;
 }

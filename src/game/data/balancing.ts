@@ -32,10 +32,26 @@ export const BALANCING = {
     bossKillBonus: 500,
   },
 
-  /** Combo system (later phases) */
+  /** Combo system */
   combo: {
-    decayTime: 2.5,
+    decayTime: 2.8,
     maxMultiplier: 5,
+    killsPerStep: 2,
+  },
+
+  /** Wave spawning */
+  waves: {
+    betweenWaveDelay: 2.5,
+    startDelay: 1.0,
+    skyYMin: 90,
+    skyYMax: 300,
+    loopFromWave: 4,
+  },
+
+  /** Score values */
+  scoring: {
+    hitBonus: 0,
+    waveClearMultiplier: 1,
   },
 
   /** Screen shake */

@@ -59,24 +59,24 @@ src/
 
 | File | Purpose |
 |------|---------|
-| `src/game/data/balancing.ts` | Global constants (canvas size, base health, economy) |
+| `src/game/data/balancing.ts` | Global constants (canvas size, base health, combo, waves) |
 | `src/game/data/turretConfig.ts` | Turret rotation + Machine Gun weapon stats |
+| `src/game/data/enemies.ts` | Enemy type definitions (HP, speed, patterns, score) |
+| `src/game/data/levels.ts` | Level 1 wave spawn schedules |
 
-## Current Status — Phase 1 Complete
+## Current Status — Phase 2 Complete
 
-- [x] Vite + React + TypeScript scaffold
-- [x] Modular folder structure
-- [x] Canvas game loop with delta time
-- [x] Fixed turret with mouse + keyboard aiming
-- [x] Machine gun firing with heat, trails, muzzle flash
-- [x] Parallax sci-fi background + base silhouette
-- [x] Title screen with how-to-play
-- [x] HUD shell (score, credits, health, breach, weapon heat)
-- [x] Pause / resume flow
+- [x] Phase 1: Turret prototype, HUD shell, pause flow
+- [x] 3 flying enemy types (Scout Saucer, Drop Carrier, Bomber Ship)
+- [x] Left/right spawn lanes with movement patterns (sine, bob, arc)
+- [x] Bullet vs enemy collision detection
+- [x] Hit sparks, explosions, score popups, screen shake
+- [x] Score system with combo multiplier (×2–×5)
+- [x] Timed wave spawner (6 waves, loops from wave 4)
+- [x] Wave clear bonuses
 
 ### Next Phases
 
-- Phase 2: Enemies, collisions, wave spawning
 - Phase 3: Ground enemies + breach system
 - Phase 4: Boss fights
 - Phase 5: Score/credits economy
