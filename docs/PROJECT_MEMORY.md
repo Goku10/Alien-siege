@@ -3,8 +3,9 @@
 > **Purpose:** Persistent project history and context for future development sessions.
 > Read this file first when resuming work on this repo (human or AI agent).
 
-**Last updated:** 2026-06-12  
+**Last updated:** 2026-06-12 (session closed — MVP complete)  
 **Current phase:** Phase 12 complete (MVP)  
+**Latest commit:** `848df14` on `main`  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -264,14 +265,16 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 2. Waves spawn with level scaling; shoot flyers, bombs, pods, ground units
 3. Wave clear bonus between waves; final wave → boss warning → mothership fight → level complete
 4. Level complete → summary → shop → next level (or Campaign Complete after L3)
-5. **Game over** if breach fills or base health hits zero
-6. Base health/breach persist across levels within a run
+5. **Game over** if breach fills or base health + shields hit zero
+6. Base health, shields, and breach persist across levels within a run
+7. Shop purchases persist for the full run; **restart / quit to title** resets everything
 
 ### Active systems
 | System | File | Role |
 |--------|------|------|
 | Game | `src/game/Game.ts` | Orchestrates update/render, game over |
-| BaseDefenseSystem | `src/game/systems/BaseDefenseSystem.ts` | Health, breach, defeat |
+| BaseDefenseSystem | `src/game/systems/BaseDefenseSystem.ts` | Health, shield pool, breach, defeat |
+| killResolver | `src/game/systems/killResolver.ts` | Shared kill feedback + splash damage |
 | ThreatSystem | `src/game/systems/ThreatSystem.ts` | Drops, bombs, pods, ground AI |
 | EntityManager | `src/game/systems/EntityManager.ts` | All entity pools |
 | CollisionSystem | `src/game/systems/CollisionSystem.ts` | Multi-layer bullet hits |
@@ -296,7 +299,9 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ### Config / tuning files
 | File | Tune here |
 |------|-----------|
-| `src/game/data/balancing.ts` | Base HP, breach, bomb damage, threat speeds |
+| `src/game/data/balancing.ts` | Base HP, combo, combat, shake, UI popup positions |
+| `src/game/data/spawnModifiers.ts` | Level scaling → spawn modifier helpers |
+| `src/game/data/bossConfig.ts` | Mothership boss phases and attacks |
 | `src/game/data/credits.ts` | Credit rewards — kills, waves, level, boss, bonuses |
 | `src/game/data/shopItems.ts` | Shop catalog — costs, effects, categories |
 | `src/game/data/weapons.ts` | Weapon stat definitions |
@@ -350,8 +355,13 @@ input → turret → firing → entities.update → flying drops
 | `5040149` | 2026-06-12 | Phase 11 — presentation polish |
 | `6ac30b9` | 2026-06-12 | Project memory update for Phase 11 |
 | `332b693` | 2026-06-12 | Phase 12 — MVP stabilization |
+| `848df14` | 2026-06-12 | Project memory update for Phase 12 |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
+
+### Session note (2026-06-12)
+
+Phases 10–12 completed in one day: enemy variety + scaling, presentation polish, then MVP stabilization. Game is playable end-to-end on `main`. Next session should pick from **Post-MVP ideas** below.
 
 ---
 
@@ -387,8 +397,10 @@ When finishing a phase:
 
 - Flyers exiting screen without kill causes no penalty.
 - Ground threats persist across wave transitions (intentional pressure).
-- No brute/spore pod ground types yet.
-- No tests.
+- Secondary weapon / cooldown HUD fields are placeholders (not implemented).
+- No audio library wired yet (hook comments only).
+- No save/load — in-memory session only.
+- No automated tests.
 
 ---
 
