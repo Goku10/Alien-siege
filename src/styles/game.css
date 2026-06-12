@@ -782,6 +782,37 @@
   font-weight: 600;
 }
 
+.hud__weapon-name--equipped {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.hud__weapon-kind {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.hud__bar-group--compact {
+  margin-top: 0.35rem;
+}
+
+.hud__bar--mag,
+.hud__bar--secondary {
+  margin-top: 0.25rem;
+}
+
+.hud__bar-fill--mag {
+  background: linear-gradient(90deg, #52b788, #95d5b2);
+}
+
+.hud__bar-fill--reload {
+  background: linear-gradient(90deg, #e85d04, #ffba08);
+}
+
 .prototype-badge {
   position: absolute;
   top: 50%;

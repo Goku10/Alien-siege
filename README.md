@@ -69,17 +69,16 @@ src/
 | `src/game/data/shopItems.ts` | Shop catalog (costs, categories, stat effects) |
 | `src/game/data/weapons.ts` | Weapon definitions for shop loadout |
 
-## Current Status — Phase 7 Complete
+## Current Status — Phase 8 Complete
 
-- [x] Phases 1–6: Combat, defense, levels, boss, credits economy
-- [x] **Between-level shop** — spend credits on weapons and upgrades
-- [x] Four shop categories: Weapons, Weapon Upgrades, Defense, Special Systems
-- [x] Buy and equip flow with affordable / owned / equipped button states
-- [x] Level complete → summary → shop → next level
+- [x] Phases 1–7: Full campaign loop with shop and credits
+- [x] **Five weapon types** with distinct mechanics (pierce, splash, reload, pellets)
+- [x] Machine Gun (starter), Laser Cannon, Missile Launcher, Flak Cannon, Plasma Blaster
+- [x] Shop unlock + equip; HUD shows weapon name, kind, ammo/reload or heat
 
 ### Next Phases
 
-- Phase 8: Polish (particles, audio hooks, balance pass)
+- Phase 9: Polish (particles, audio hooks, balance pass)
 
 ## License
 

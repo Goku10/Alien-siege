@@ -15,8 +15,10 @@ export const SHOP_CATEGORY_LABELS: Record<ShopCategory, string> = {
 
 export type ShopItemId =
   | 'weapon_machine_gun'
-  | 'weapon_plasma_rifle'
-  | 'weapon_scatter_cannon'
+  | 'weapon_laser_cannon'
+  | 'weapon_missile_launcher'
+  | 'weapon_flak_cannon'
+  | 'weapon_plasma_blaster'
   | 'upgrade_hardened_rounds'
   | 'upgrade_cyclone_feed'
   | 'upgrade_thermal_sink'
@@ -63,24 +65,46 @@ export const SHOP_ITEMS: ShopItemDefinition[] = [
     effects: [],
   },
   {
-    id: 'weapon_plasma_rifle',
+    id: 'weapon_laser_cannon',
     category: 'weapons',
-    name: 'Plasma Rifle',
-    cost: 180,
-    description: 'Heavy energy bolts that punch through armored flyers.',
-    statEffect: '14 dmg · 6.5 rps',
-    weaponId: 'plasma_rifle',
+    name: 'Laser Cannon',
+    cost: 200,
+    description: 'Piercing beam cuts through several targets per shot.',
+    statEffect: '26 dmg · pierce 4 · 2.4 rps',
+    weaponId: 'laser_cannon',
     unique: true,
     effects: [],
   },
   {
-    id: 'weapon_scatter_cannon',
+    id: 'weapon_missile_launcher',
     category: 'weapons',
-    name: 'Scatter Cannon',
-    cost: 220,
-    description: 'Rapid-fire spread ideal for swarms and pods.',
-    statEffect: '5 dmg · 14 rps',
-    weaponId: 'scatter_cannon',
+    name: 'Missile Launcher',
+    cost: 280,
+    description: 'Single heavy missile with reload and large blast radius.',
+    statEffect: '48 dmg · 58 splash · 2.1s reload',
+    weaponId: 'missile_launcher',
+    unique: true,
+    effects: [],
+  },
+  {
+    id: 'weapon_flak_cannon',
+    category: 'weapons',
+    name: 'Flak Cannon',
+    cost: 240,
+    description: 'Shrapnel burst shreds swarms; magazine + reload cycle.',
+    statEffect: '7×5 dmg · 22 splash · 4 round mag',
+    weaponId: 'flak_cannon',
+    unique: true,
+    effects: [],
+  },
+  {
+    id: 'weapon_plasma_blaster',
+    category: 'weapons',
+    name: 'Plasma Blaster',
+    cost: 190,
+    description: 'Balanced energy bolts with splash for clustered targets.',
+    statEffect: '15 dmg · 30 splash · 4.2 rps',
+    weaponId: 'plasma_blaster',
     unique: true,
     effects: [],
   },

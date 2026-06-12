@@ -3,7 +3,7 @@ import { dropPodPool, spawnDropPod, updateDropPod } from '../entities/DropPod';
 import { groundEnemyPool, spawnGroundEnemy, updateGroundEnemy } from '../entities/GroundEnemy';
 import { applyEnemyModifiers, spawnEnemy, updateEnemy, type EnemySpawnModifiers } from '../entities/Enemy';
 import type { WeaponStats } from '../data/weapons';
-import { spawnProjectile, updateProjectile } from '../entities/Projectile';
+import { spawnWeaponProjectiles, updateProjectile } from '../entities/Projectile';
 import { getBaseLayout } from '../utils/baseLayout';
 import type {
   BombState,
@@ -15,10 +15,12 @@ import type {
   MuzzleFlash,
   ProjectileState,
   SpawnSide,
+  SplashBurst,
 } from '../types';
 
 export class EntityManager {
   private weaponStats!: WeaponStats;
+  private pendingSplashBursts: SplashBurst[] = [];
   projectiles: ProjectileState[] = [];
   enemies: EnemyState[] = [];
   bombs: BombState[] = [];
@@ -54,10 +56,16 @@ export class EntityManager {
     this.weaponStats = stats;
   }
 
-  spawnBullet(x: number, y: number, angle: number): ProjectileState {
-    const bullet = spawnProjectile(x, y, angle, this.weaponStats);
-    this.projectiles.push(bullet);
-    return bullet;
+  spawnWeaponFire(x: number, y: number, angle: number): number {
+    const shots = spawnWeaponProjectiles(x, y, angle, this.weaponStats);
+    this.projectiles.push(...shots);
+    return shots.length;
+  }
+
+  drainSplashBursts(): SplashBurst[] {
+    const bursts = this.pendingSplashBursts;
+    this.pendingSplashBursts = [];
+    return bursts;
   }
 
   spawnEnemy(
@@ -131,9 +139,25 @@ export class EntityManager {
   }
 
   update(dt: number, boundsW: number, boundsH: number): void {
-    this.projectiles = this.projectiles.filter((p) =>
-      p.active && updateProjectile(p, dt, boundsW, boundsH, this.weaponStats.trailLength),
-    );
+    this.pendingSplashBursts = [];
+    this.projectiles = this.projectiles.filter((p) => {
+      if (!p.active) return false;
+      const airburst =
+        p.kind === 'missile' && p.splashRadius > 0
+          ? {
+              x: p.x,
+              y: p.y,
+              damage: p.damage,
+              radius: p.splashRadius,
+              kind: p.kind,
+            }
+          : null;
+      const result = updateProjectile(p, dt, boundsW, boundsH);
+      if (result === 'expired' && airburst) {
+        this.pendingSplashBursts.push(airburst);
+      }
+      return result === 'alive';
+    });
 
     this.enemies = this.enemies.filter((e) =>
       e.active && updateEnemy(e, dt, boundsW),

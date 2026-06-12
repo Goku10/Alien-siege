@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 7 complete  
+**Current phase:** Phase 8 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -45,7 +45,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 5 | Mothership boss fight (3 phases) | ✅ Done |
 | 6 | Credits economy + level-end summary | ✅ Done |
 | 7 | Between-level shop + upgrades | ✅ Done |
-| 8 | Polish — particles, audio hooks, balance pass | ⏳ Next |
+| 8 | Multi-weapon arsenal (5 weapon types) | ✅ Done |
+| 9 | Polish — particles, audio hooks, balance pass | ⏳ Next |
 
 ---
 
@@ -268,12 +269,12 @@ input → turret → firing → entities.update → flying drops
 
 ---
 
-## Phase 8 preview (next work)
+## Phase 9 preview (next work)
 
 - [ ] Polish pass — particles, audio hooks, balance tuning
-- [ ] Additional shop items / weapon variety if needed
+- [ ] Additional weapons / secondary abilities if needed
 
-**Config:** `shopItems.ts` for prices/effects; `credits.ts` for earn rates.
+**Config:** `weapons.ts` for weapon stats; `shopItems.ts` for unlock costs.
 
 ---
 

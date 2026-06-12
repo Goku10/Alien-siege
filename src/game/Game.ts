@@ -351,13 +351,19 @@ export class Game {
 
     const now = this.elapsedTime;
     if (this.turret.wantsToFire(input) && this.turret.canFire(now)) {
+      const weapon = this.turret.getWeapon();
       const muzzle = this.turret.getMuzzlePosition();
+      this.entities.spawnWeaponFire(muzzle.x, muzzle.y, this.turret.state.angle);
       this.economy.recordShotFired();
-      this.entities.spawnBullet(muzzle.x, muzzle.y, this.turret.state.angle);
       this.entities.addMuzzleFlash(this.turret.createMuzzleFlash());
       this.turret.applyHeat();
+      this.turret.consumeAmmo();
       this.turret.markFired(now);
-      this.addScreenShake(1.5);
+      const shake =
+        weapon.kind === 'missile' ? 5 :
+        weapon.kind === 'flak' ? 3 :
+        weapon.kind === 'laser' ? 2 : 1.5;
+      this.addScreenShake(shake);
     }
 
     this.entities.update(dt, width, height);
@@ -396,6 +402,20 @@ export class Game {
         onHit: () => this.economy.recordShotHit(),
       },
     );
+    const splashBursts = this.entities.drainSplashBursts();
+    if (splashBursts.length > 0) {
+      this.collision.processSplashBursts(
+        splashBursts,
+        this.entities,
+        this.effects,
+        this.economy,
+        this.bosses,
+        {
+          onScreenShake: (amount) => this.addScreenShake(amount),
+          onHit: () => this.economy.recordShotHit(),
+        },
+      );
+    }
     this.entities.pruneProjectiles();
 
     this.threats.updateThreats(
@@ -469,8 +489,14 @@ export class Game {
       maxBreach: this.base.maxBreach,
       combo: this.economy.getCombo(),
       weaponName: this.turret.getWeapon().name,
+      weaponId: this.turret.getWeapon().id,
+      weaponKind: this.turret.getWeapon().kind,
       heat: this.turret.state.heat,
       maxHeat: this.turret.state.maxHeat,
+      magazine: this.turret.state.magazine,
+      magazineSize: this.turret.state.magazineSize,
+      reloading: this.turret.state.reloading,
+      reloadProgress: this.turret.getReloadProgress(),
       secondaryCooldown: 0,
       secondaryMaxCooldown: 1,
       isBossFight,

@@ -17,6 +17,12 @@ function createProjectile(): ProjectileState {
     maxLife: 0,
     active: false,
     trail: [],
+    kind: 'bullet',
+    splashRadius: 0,
+    pierceRemaining: 0,
+    color: '#fff8d0',
+    glowColor: 'rgba(255, 180, 60, 0.6)',
+    trailLength: 6,
   };
 }
 
@@ -26,24 +32,44 @@ function resetProjectile(p: ProjectileState): void {
   p.trail.length = 0;
 }
 
-export const projectilePool = new ObjectPool(createProjectile, resetProjectile, 64);
+export const projectilePool = new ObjectPool(createProjectile, resetProjectile, 96);
 
-export function spawnProjectile(
+export function spawnWeaponProjectiles(
   x: number,
   y: number,
   angle: number,
   weapon: WeaponStats,
-): ProjectileState {
-  const p = projectilePool.acquire();
-  p.x = x;
-  p.y = y;
-  p.vx = Math.cos(angle) * weapon.projectileSpeed;
-  p.vy = Math.sin(angle) * weapon.projectileSpeed;
-  p.damage = weapon.damage;
-  p.radius = weapon.projectileRadius;
-  p.life = weapon.projectileLife;
-  p.maxLife = weapon.projectileLife;
-  return p;
+): ProjectileState[] {
+  const pellets = Math.max(1, weapon.pelletsPerShot);
+  const projectiles: ProjectileState[] = [];
+
+  for (let i = 0; i < pellets; i++) {
+    const spreadOffset =
+      pellets === 1
+        ? 0
+        : (i / (pellets - 1) - 0.5) * weapon.pelletSpread;
+    const shotAngle = angle + spreadOffset;
+    const p = projectilePool.acquire();
+
+    p.x = x;
+    p.y = y;
+    p.vx = Math.cos(shotAngle) * weapon.projectileSpeed;
+    p.vy = Math.sin(shotAngle) * weapon.projectileSpeed;
+    p.damage = weapon.damage;
+    p.radius = weapon.projectileRadius;
+    p.life = weapon.projectileLife;
+    p.maxLife = weapon.projectileLife;
+    p.kind = weapon.kind;
+    p.splashRadius = weapon.splashRadius;
+    p.pierceRemaining = weapon.pierceCount;
+    p.color = weapon.color;
+    p.glowColor = weapon.glowColor;
+    p.trailLength = weapon.trailLength;
+
+    projectiles.push(p);
+  }
+
+  return projectiles;
 }
 
 export function updateProjectile(
@@ -51,12 +77,11 @@ export function updateProjectile(
   dt: number,
   boundsW: number,
   boundsH: number,
-  trailLength: number,
-): boolean {
-  if (!p.active) return false;
+): 'alive' | 'expired' | 'dead' {
+  if (!p.active) return 'dead';
 
   p.trail.push({ x: p.x, y: p.y });
-  if (p.trail.length > trailLength) {
+  if (p.trail.length > p.trailLength) {
     p.trail.shift();
   }
 
@@ -70,10 +95,18 @@ export function updateProjectile(
     p.y < -20 ||
     p.y > boundsH + 20;
 
-  if (p.life <= 0 || offScreen) {
+  if (p.life <= 0) {
+    const airburst = p.kind === 'missile' && p.splashRadius > 0;
     p.active = false;
     projectilePool.release(p);
-    return false;
+    return airburst ? 'expired' : 'dead';
   }
-  return true;
+
+  if (offScreen) {
+    p.active = false;
+    projectilePool.release(p);
+    return 'dead';
+  }
+
+  return 'alive';
 }

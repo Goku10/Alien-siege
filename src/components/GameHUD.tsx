@@ -11,6 +11,11 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
   const healthPct = (snapshot.baseHealth / snapshot.maxBaseHealth) * 100;
   const breachPct = (snapshot.breach / snapshot.maxBreach) * 100;
   const heatPct = (snapshot.heat / snapshot.maxHeat) * 100;
+  const hasMagazine = snapshot.magazineSize > 0;
+  const magPct = hasMagazine
+    ? (snapshot.magazine / snapshot.magazineSize) * 100
+    : 0;
+  const reloadPct = snapshot.reloading ? snapshot.reloadProgress * 100 : 0;
   const healthLow = healthPct <= 30;
   const breachHigh = snapshot.breachDanger;
   const bossPct =
@@ -112,13 +117,45 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
 
         <div className="hud__weapon">
           <span className="hud__label">WEAPON</span>
-          <span className="hud__weapon-name">{snapshot.weaponName}</span>
-          <div className="hud__bar hud__bar--heat">
-            <div
-              className="hud__bar-fill hud__bar-fill--heat"
-              style={{ width: `${heatPct}%` }}
-            />
-          </div>
+          <span className="hud__weapon-name hud__weapon-name--equipped">
+            {snapshot.weaponName}
+            <span className="hud__weapon-kind">{snapshot.weaponKind}</span>
+          </span>
+          {hasMagazine ? (
+            <div className="hud__bar-group hud__bar-group--compact">
+              <span className="hud__label">
+                {snapshot.reloading ? 'RELOADING' : 'AMMO'}
+              </span>
+              <span className="hud__bar-value">
+                {snapshot.reloading
+                  ? `${Math.round(reloadPct)}%`
+                  : `${snapshot.magazine}/${snapshot.magazineSize}`}
+              </span>
+              <div className="hud__bar hud__bar--mag">
+                <div
+                  className={`hud__bar-fill ${snapshot.reloading ? 'hud__bar-fill--reload' : 'hud__bar-fill--mag'}`}
+                  style={{
+                    width: `${snapshot.reloading ? reloadPct : magPct}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="hud__bar hud__bar--heat">
+              <div
+                className="hud__bar-fill hud__bar-fill--heat"
+                style={{ width: `${heatPct}%` }}
+              />
+            </div>
+          )}
+          {hasMagazine && (
+            <div className="hud__bar hud__bar--heat hud__bar--secondary">
+              <div
+                className="hud__bar-fill hud__bar-fill--heat"
+                style={{ width: `${heatPct}%` }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -101,7 +101,14 @@ export interface TurretState {
   maxHeat: number;
   cooling: boolean;
   lastFireTime: number;
+  magazine: number;
+  magazineSize: number;
+  reloading: boolean;
+  reloadTimer: number;
+  reloadDuration: number;
 }
+
+export type ProjectileKind = 'bullet' | 'laser' | 'missile' | 'flak' | 'plasma';
 
 export interface ProjectileState {
   id: number;
@@ -115,6 +122,20 @@ export interface ProjectileState {
   maxLife: number;
   active: boolean;
   trail: Vector2[];
+  kind: ProjectileKind;
+  splashRadius: number;
+  pierceRemaining: number;
+  color: string;
+  glowColor: string;
+  trailLength: number;
+}
+
+export interface SplashBurst {
+  x: number;
+  y: number;
+  damage: number;
+  radius: number;
+  kind: ProjectileKind;
 }
 
 export interface EnemyState {
@@ -285,8 +306,14 @@ export interface GameSnapshot {
   maxBreach: number;
   combo: number;
   weaponName: string;
+  weaponId: string;
+  weaponKind: string;
   heat: number;
   maxHeat: number;
+  magazine: number;
+  magazineSize: number;
+  reloading: boolean;
+  reloadProgress: number;
   secondaryCooldown: number;
   secondaryMaxCooldown: number;
   isBossFight: boolean;
