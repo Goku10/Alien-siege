@@ -150,7 +150,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 6 — Credits economy
-**Commit:** *(pending)* — *Phase 6: Credits economy separate from score.*
+**Commit:** `1d04117` — *Phase 6: Credits economy separate from arcade score.*
 
 **Built:**
 - `src/game/data/credits.ts` — all credit payout tables (kills, waves, level, boss, performance bonuses)
@@ -243,6 +243,7 @@ input → turret → firing → entities.update → flying drops
 | `e654341` | 2026-06-12 | Phase 3 — ground threats, breach, game over |
 | `ecbdd61` | 2026-06-12 | Phase 4 — level manager, scaled waves, boss warning |
 | `5207bb4` | 2026-06-12 | Phase 5 — mothership boss fight |
+| `1d04117` | 2026-06-12 | Phase 6 — credits economy + level summary |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
