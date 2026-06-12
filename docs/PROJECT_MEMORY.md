@@ -244,7 +244,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 12 — MVP stabilization
-**Commit:** *(pending)* — *Phase 12: Refactor, bug fixes, and MVP documentation.*
+**Commit:** `332b693` — *Phase 12: Refactor, bug fixes, and MVP documentation.*
 
 **Built:**
 - Unified `FlyerSpawnModifiers` / `spawnModifiers.ts`; `killResolver.ts` deduplicates kill feedback
@@ -349,7 +349,7 @@ input → turret → firing → entities.update → flying drops
 | `a0b277c` | 2026-06-12 | Project memory update for Phase 10 |
 | `5040149` | 2026-06-12 | Phase 11 — presentation polish |
 | `6ac30b9` | 2026-06-12 | Project memory update for Phase 11 |
-| *(pending)* | 2026-06-12 | Phase 12 — MVP stabilization |
+| `332b693` | 2026-06-12 | Phase 12 — MVP stabilization |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
