@@ -194,7 +194,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 9 — Tiered upgrades
-**Commit:** *(pending)* — *Phase 9: Tiered upgrade system with stat previews.*
+**Commit:** `c1217ed` — *Phase 9: Tiered upgrade system with stat previews.*
 
 **Built:**
 - `upgradeEffects.ts` — effect schema (damage, fire rate, cooling, reload, splash, health, breach, shield, cooldown)
@@ -291,6 +291,7 @@ input → turret → firing → entities.update → flying drops
 | `1d04117` | 2026-06-12 | Phase 6 — credits economy + level summary |
 | `8316102` | 2026-06-12 | Phase 7 — between-level armory shop |
 | `f320e2b` | 2026-06-12 | Phase 8 — multi-weapon arsenal |
+| `c1217ed` | 2026-06-12 | Phase 9 — tiered upgrade system |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
