@@ -4,6 +4,7 @@ import { GameOverScreen } from './GameOverScreen';
 import { LevelCompleteScreen } from './LevelCompleteScreen';
 import { LevelIntroOverlay } from './LevelIntroOverlay';
 import { PauseOverlay } from './PauseOverlay';
+import { ShopScreen } from './ShopScreen';
 import { TitleScreen } from './TitleScreen';
 import { useGameCanvas } from '../hooks/useGameCanvas';
 
@@ -16,7 +17,10 @@ export function GameCanvas() {
     goToTitle,
     resumeGame,
     restartGame,
-    continueLevel,
+    openShop,
+    leaveShop,
+    purchaseShopItem,
+    equipShopItem,
   } = useGameCanvas();
 
   const showHUD = screen === 'playing' || screen === 'paused';
@@ -38,8 +42,16 @@ export function GameCanvas() {
       {screen === 'levelComplete' && (
         <LevelCompleteScreen
           snapshot={snapshot}
-          onContinue={continueLevel}
+          onContinue={openShop}
           onTitle={goToTitle}
+        />
+      )}
+      {screen === 'shop' && (
+        <ShopScreen
+          snapshot={snapshot}
+          onContinue={leaveShop}
+          onBuy={purchaseShopItem}
+          onEquip={equipShopItem}
         />
       )}
       {screen === 'gameOver' && (
@@ -50,7 +62,7 @@ export function GameCanvas() {
         />
       )}
       {screen === 'playing' && (
-        <div className="prototype-badge">Phase 5 — Mothership Boss</div>
+        <div className="prototype-badge">Phase 7 — Armory Shop</div>
       )}
     </div>
   );

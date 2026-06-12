@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 6 complete  
+**Current phase:** Phase 7 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -44,8 +44,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 4 | Level structure, scaling waves, boss warning scaffold | ✅ Done |
 | 5 | Mothership boss fight (3 phases) | ✅ Done |
 | 6 | Credits economy + level-end summary | ✅ Done |
-| 7 | Between-level shop + upgrades | ⏳ Next |
-| 8 | Polish — particles, audio hooks, balance pass | Pending |
+| 7 | Between-level shop + upgrades | ✅ Done |
+| 8 | Polish — particles, audio hooks, balance pass | ⏳ Next |
 
 ---
 
@@ -165,7 +165,21 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 6)
+### Phase 7 — Between-level shop
+**Commit:** *(pending)* — *Phase 7: Between-level armory shop.*
+
+**Built:**
+- `ShopManager` — buy, equip, owned/equipped state, loadout stat resolution
+- `shopItems.ts` — 12 data-driven items across 4 categories (weapons, weapon upgrades, defense, special)
+- `weapons.ts` — Machine Gun, Plasma Rifle, Scatter Cannon catalogs
+- `ShopScreen` — credits display, categorized cards, button states (buy / equip / owned / equipped / unaffordable)
+- Flow: **level complete → summary → shop → next level** (shop skipped on campaign complete)
+- Purchases wired to gameplay: weapon stats, max health, bomb reduction, breach slowdown, combo decay, credit multiplier, between-level heal
+- `Turret` + `Projectile` + `EconomyManager` read effective loadout from shop
+
+---
+
+## Current state (after Phase 7)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
@@ -187,6 +201,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | BossManager | `src/game/systems/BossManager.ts` | Mothership phases, attacks, defeat |
 | WaveManager | `src/game/systems/WaveManager.ts` | Per-level timed wave spawns |
 | EconomyManager | `src/game/systems/EconomyManager.ts` | Score, combo, credits, level summary |
+| ShopManager | `src/game/systems/ShopManager.ts` | Buy/equip, loadout bonuses |
 | EffectsManager | `src/game/systems/EffectsManager.ts` | VFX + warning markers |
 | Renderer | `src/game/rendering/Renderer.ts` | Full layered draw |
 
@@ -195,6 +210,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 |-----------|------|
 | `GameHUD` | Score, credits, health, breach, danger alerts |
 | `LevelCompleteScreen` | Level-end score + credits summary |
+| `ShopScreen` | Between-level armory (buy / equip) |
 | `GameOverScreen` | Defeat + restart |
 | `PauseOverlay` | Resume / quit |
 | `TitleScreen` | Start + how-to-play |
@@ -204,6 +220,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 |------|-----------|
 | `src/game/data/balancing.ts` | Base HP, breach, bomb damage, threat speeds |
 | `src/game/data/credits.ts` | Credit rewards — kills, waves, level, boss, bonuses |
+| `src/game/data/shopItems.ts` | Shop catalog — costs, effects, categories |
+| `src/game/data/weapons.ts` | Weapon stat definitions |
 | `src/game/data/groundEnemies.ts` | Crawler/spitter/leaper stats |
 | `src/game/data/enemies.ts` | Flyer drops (interval, max drops) |
 | `src/game/utils/baseLayout.ts` | Base/breach zone geometry |
@@ -249,13 +267,12 @@ input → turret → firing → entities.update → flying drops
 
 ---
 
-## Phase 7 preview (next work)
+## Phase 8 preview (next work)
 
-- [ ] Between-level shop screen
-- [ ] Purchasable weapons and upgrades
-- [ ] Spend credits earned in Phase 6
+- [ ] Polish pass — particles, audio hooks, balance tuning
+- [ ] Additional shop items / weapon variety if needed
 
-**Config:** `src/game/data/credits.ts` for earn rates; `shopItems.ts` for prices.
+**Config:** `shopItems.ts` for prices/effects; `credits.ts` for earn rates.
 
 ---
 
@@ -282,7 +299,6 @@ When finishing a phase:
 
 - Flyers exiting screen without kill causes no penalty.
 - Ground threats persist across wave transitions (intentional pressure).
-- `ShopManager` is still a stub.
 - No brute/spore pod ground types yet.
 - No tests.
 

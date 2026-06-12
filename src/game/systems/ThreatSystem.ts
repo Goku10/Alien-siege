@@ -1,3 +1,4 @@
+import { BALANCING } from '../data/balancing';
 import { ENEMY_DEFINITIONS } from '../data/enemies';
 import { pickPodPayload } from '../data/groundEnemies';
 import { canEnemyDrop, tickEnemyDrop } from '../entities/Enemy';
@@ -9,6 +10,13 @@ import type { EnemyState } from '../types';
 
 export class ThreatSystem {
   bombWarningActive = false;
+  private bombDamageReduction = 0;
+  private breachRateMultiplier = 1;
+
+  setDefenseModifiers(bombDamageReduction: number, breachRateMultiplier: number): void {
+    this.bombDamageReduction = Math.max(0, Math.min(0.9, bombDamageReduction));
+    this.breachRateMultiplier = Math.max(0.1, breachRateMultiplier);
+  }
 
   updateFlyingDrops(
     enemies: EnemyState[],
@@ -50,7 +58,7 @@ export class ThreatSystem {
       if (!b.active) return false;
       const state = entities.updateBombEntity(b, dt, layout.groundY);
       if (state === 'impact') {
-        base.applyBombDamage(b.damage);
+        base.applyBombDamage(b.damage, this.bombDamageReduction);
         effects.spawnExplosion(b.x, layout.groundY, b.radius * 2.5, '#ff6b35');
         effects.addBombImpactMarker(b.x, layout.groundY);
         onShake(8);
@@ -84,8 +92,8 @@ export class ThreatSystem {
         return false;
       }
       const result = entities.updateGroundEntity(g, dt, layout);
-      if (result.breachBurst > 0) base.addBreach(result.breachBurst);
-      if (result.breachDelta > 0) base.addBreach(result.breachDelta);
+      const breachAmount = (result.breachDelta + result.breachBurst) * this.breachRateMultiplier;
+      this.applyGroundBreach(g, breachAmount, base);
       if (result.baseDamage > 0) {
         base.applyBaseDamage(result.baseDamage);
         effects.spawnBaseHitEffect(layout.centerX, layout.baseY + layout.baseH * 0.3);
@@ -96,5 +104,22 @@ export class ThreatSystem {
       }
       return true;
     });
+  }
+
+  private applyGroundBreach(
+    g: { breachContributed: number },
+    amount: number,
+    base: BaseDefenseSystem,
+  ): void {
+    if (amount <= 0) return;
+
+    const perEnemyCap =
+      base.maxBreach / BALANCING.base.groundUnitsRequiredForFullBreach;
+    const room = perEnemyCap - g.breachContributed;
+    if (room <= 0) return;
+
+    const applied = Math.min(amount, room);
+    g.breachContributed += applied;
+    base.addBreach(applied);
   }
 }

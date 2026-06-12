@@ -111,7 +111,7 @@ export function LevelCompleteScreen({ snapshot, onContinue, onTitle }: LevelComp
         <div className="panel__actions">
           {showNextLevel && (
             <button type="button" className="btn btn--primary" onClick={onContinue}>
-              Next Level
+              Visit Shop
             </button>
           )}
           <button type="button" className="btn btn--secondary" onClick={onTitle}>

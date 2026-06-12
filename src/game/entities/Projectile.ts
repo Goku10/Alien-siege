@@ -1,4 +1,4 @@
-import { MACHINE_GUN } from '../data/turretConfig';
+import type { WeaponStats } from '../data/weapons';
 import type { ProjectileState } from '../types';
 import { ObjectPool } from '../../utils/objectPool';
 
@@ -11,10 +11,10 @@ function createProjectile(): ProjectileState {
     y: 0,
     vx: 0,
     vy: 0,
-    damage: MACHINE_GUN.damage,
-    radius: MACHINE_GUN.projectileRadius,
+    damage: 0,
+    radius: 0,
     life: 0,
-    maxLife: MACHINE_GUN.projectileLife,
+    maxLife: 0,
     active: false,
     trail: [],
   };
@@ -22,14 +22,6 @@ function createProjectile(): ProjectileState {
 
 function resetProjectile(p: ProjectileState): void {
   p.id = nextProjectileId++;
-  p.x = 0;
-  p.y = 0;
-  p.vx = 0;
-  p.vy = 0;
-  p.damage = MACHINE_GUN.damage;
-  p.radius = MACHINE_GUN.projectileRadius;
-  p.life = MACHINE_GUN.projectileLife;
-  p.maxLife = MACHINE_GUN.projectileLife;
   p.active = true;
   p.trail.length = 0;
 }
@@ -40,21 +32,31 @@ export function spawnProjectile(
   x: number,
   y: number,
   angle: number,
-  speed: number = MACHINE_GUN.projectileSpeed,
+  weapon: WeaponStats,
 ): ProjectileState {
   const p = projectilePool.acquire();
   p.x = x;
   p.y = y;
-  p.vx = Math.cos(angle) * speed;
-  p.vy = Math.sin(angle) * speed;
+  p.vx = Math.cos(angle) * weapon.projectileSpeed;
+  p.vy = Math.sin(angle) * weapon.projectileSpeed;
+  p.damage = weapon.damage;
+  p.radius = weapon.projectileRadius;
+  p.life = weapon.projectileLife;
+  p.maxLife = weapon.projectileLife;
   return p;
 }
 
-export function updateProjectile(p: ProjectileState, dt: number, boundsW: number, boundsH: number): boolean {
+export function updateProjectile(
+  p: ProjectileState,
+  dt: number,
+  boundsW: number,
+  boundsH: number,
+  trailLength: number,
+): boolean {
   if (!p.active) return false;
 
   p.trail.push({ x: p.x, y: p.y });
-  if (p.trail.length > MACHINE_GUN.trailLength) {
+  if (p.trail.length > trailLength) {
     p.trail.shift();
   }
 

@@ -186,6 +186,7 @@ export interface GroundEnemyState {
   attackInterval: number;
   attackRange: number;
   attackTimer: number;
+  breachContributed: number;
   behavior: GroundEnemyBehavior;
   leapTimer: number;
   leapDuration: number;
@@ -231,6 +232,32 @@ export interface MuzzleFlash {
   life: number;
   maxLife: number;
   active: boolean;
+}
+
+export type ShopItemState =
+  | 'equipped'
+  | 'owned'
+  | 'affordable'
+  | 'unaffordable'
+  | 'locked';
+
+export type ShopCategory =
+  | 'weapons'
+  | 'weapon_upgrades'
+  | 'defense_upgrades'
+  | 'special_systems';
+
+export interface ShopItemView {
+  id: string;
+  category: ShopCategory;
+  categoryLabel: string;
+  name: string;
+  cost: number;
+  description: string;
+  statEffect: string;
+  state: ShopItemState;
+  canBuy: boolean;
+  canEquip: boolean;
 }
 
 export interface LevelSummary {
@@ -284,4 +311,6 @@ export interface GameSnapshot {
   bossPhase: number;
   bossShieldActive: boolean;
   bossName: string;
+  showShop: boolean;
+  shopItems: ShopItemView[];
 }

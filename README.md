@@ -66,18 +66,19 @@ src/
 | `src/game/data/enemies.ts` | Enemy type definitions (HP, speed, patterns, score) |
 | `src/game/data/levels.ts` | Level wave schedules and bonuses |
 | `src/game/data/credits.ts` | Credit earn rates (kills, waves, boss, bonuses) |
+| `src/game/data/shopItems.ts` | Shop catalog (costs, categories, stat effects) |
+| `src/game/data/weapons.ts` | Weapon definitions for shop loadout |
 
-## Current Status — Phase 6 Complete
+## Current Status — Phase 7 Complete
 
-- [x] Phases 1–5: Combat, defense, levels, mothership boss
-- [x] **Credits** as spendable currency separate from arcade **score**
-- [x] Earn credits from kills, wave clear, boss defeat, level complete
-- [x] Optional accuracy and low-breach performance bonuses
-- [x] HUD credits display; level-end summary screen with full breakdown
+- [x] Phases 1–6: Combat, defense, levels, boss, credits economy
+- [x] **Between-level shop** — spend credits on weapons and upgrades
+- [x] Four shop categories: Weapons, Weapon Upgrades, Defense, Special Systems
+- [x] Buy and equip flow with affordable / owned / equipped button states
+- [x] Level complete → summary → shop → next level
 
 ### Next Phases
 
-- Phase 7: Between-level shop + upgrades
 - Phase 8: Polish (particles, audio hooks, balance pass)
 
 ## License

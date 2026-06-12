@@ -1,6 +1,6 @@
 /**
- * Turret and starter weapon configuration.
- * Phase 1: Machine Gun prototype stats.
+ * Turret mount configuration (rotation, placement).
+ * Weapon stats live in weapons.ts and are applied via ShopManager loadout.
  */
 
 export const TURRET_CONFIG = {
@@ -10,20 +10,7 @@ export const TURRET_CONFIG = {
   bodyRadius: 28,
   minAngle: -Math.PI * 0.92,
   maxAngle: -Math.PI * 0.08,
+  overheatPenalty: 0.5,
 } as const;
 
-export const MACHINE_GUN = {
-  id: 'machine_gun',
-  name: 'Machine Gun',
-  damage: 8,
-  fireRate: 10,
-  projectileSpeed: 900,
-  projectileRadius: 3,
-  projectileLife: 1.8,
-  heatPerShot: 4,
-  maxHeat: 100,
-  coolRate: 35,
-  overheatPenalty: 0.5,
-  muzzleFlashDuration: 0.06,
-  trailLength: 6,
-} as const;
+export { MACHINE_GUN } from './weapons';

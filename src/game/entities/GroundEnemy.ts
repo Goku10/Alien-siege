@@ -10,7 +10,8 @@ function create(): GroundEnemyState {
     id: 0, typeId: 'crawler', x: 0, y: 0, vx: 0, health: 0, maxHealth: 0,
     radius: 0, active: false, flashTimer: 0, scoreValue: 0, breachRate: 0,
     breachBurst: 0, attackDamage: 0, attackInterval: 0, attackRange: 0,
-    attackTimer: 0, behavior: 'approaching', leapTimer: 0, leapDuration: 0, targetX: 0,
+    attackTimer: 0, breachContributed: 0, behavior: 'approaching', leapTimer: 0,
+    leapDuration: 0, targetX: 0,
   };
 }
 
@@ -20,6 +21,7 @@ function reset(g: GroundEnemyState): void {
   g.flashTimer = 0;
   g.behavior = 'approaching';
   g.attackTimer = 0;
+  g.breachContributed = 0;
   g.leapTimer = 0;
 }
 

@@ -39,6 +39,8 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   bossPhase: 0,
   bossShieldActive: false,
   bossName: 'Alien Mothership',
+  showShop: false,
+  shopItems: [],
 };
 
 export function useGameCanvas() {
@@ -85,8 +87,20 @@ export function useGameCanvas() {
     gameRef.current?.restartSession();
   }, []);
 
-  const continueLevel = useCallback(() => {
-    gameRef.current?.continueToNextLevel();
+  const openShop = useCallback(() => {
+    gameRef.current?.openShop();
+  }, []);
+
+  const leaveShop = useCallback(() => {
+    gameRef.current?.leaveShopAndContinue();
+  }, []);
+
+  const purchaseShopItem = useCallback((itemId: string) => {
+    gameRef.current?.purchaseShopItem(itemId);
+  }, []);
+
+  const equipShopItem = useCallback((itemId: string) => {
+    gameRef.current?.equipShopItem(itemId);
   }, []);
 
   return {
@@ -98,6 +112,9 @@ export function useGameCanvas() {
     togglePause,
     resumeGame,
     restartGame,
-    continueLevel,
+    openShop,
+    leaveShop,
+    purchaseShopItem,
+    equipShopItem,
   };
 }

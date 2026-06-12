@@ -1,6 +1,6 @@
 import { BALANCING } from './data/balancing';
 import { MOTHERSHIP_BOSS } from './data/bossConfig';
-import { MACHINE_GUN } from './data/turretConfig';
+import type { ShopItemId } from './data/shopItems';
 import { Turret } from './entities/Turret';
 import { Renderer } from './rendering/Renderer';
 import { BaseDefenseSystem } from './systems/BaseDefenseSystem';
@@ -12,6 +12,7 @@ import { EntityManager } from './systems/EntityManager';
 import { GameLoop } from './systems/GameLoop';
 import { InputManager } from './systems/InputManager';
 import { LevelManager } from './systems/LevelManager';
+import { ShopManager } from './systems/ShopManager';
 import { ThreatSystem } from './systems/ThreatSystem';
 import { WaveManager } from './systems/WaveManager';
 import type { GameOverReason, GameScreen, GameSnapshot } from './types';
@@ -36,6 +37,7 @@ export class Game {
   private bosses: BossManager;
   private threats: ThreatSystem;
   private base: BaseDefenseSystem;
+  private shop: ShopManager;
   private turret: Turret;
   private callbacks: GameCallbacks;
 
@@ -67,6 +69,7 @@ export class Game {
     this.economy = new EconomyManager();
     this.effects = new EffectsManager();
     this.base = new BaseDefenseSystem();
+    this.shop = new ShopManager();
     this.threats = new ThreatSystem();
     this.bosses = new BossManager({
       onDefeated: (scoreBonus) => {
@@ -162,7 +165,8 @@ export class Game {
       },
     });
 
-    this.turret = new Turret(width, height);
+    this.turret = new Turret(width, height, this.shop.getWeaponStats());
+    this.syncLoadout();
 
     this.loop = new GameLoop(
       (dt) => this.update(dt),
@@ -191,8 +195,35 @@ export class Game {
     const paused =
       screen === 'paused' ||
       screen === 'gameOver' ||
-      screen === 'levelComplete';
+      screen === 'levelComplete' ||
+      screen === 'shop';
     this.loop.setPaused(paused);
+  }
+
+  openShop(): void {
+    this.setScreen('shop');
+  }
+
+  leaveShopAndContinue(): void {
+    this.shop.applyBetweenLevelEffects(this.base);
+    this.continueToNextLevel();
+  }
+
+  purchaseShopItem(itemId: string): void {
+    const result = this.shop.purchase(itemId as ShopItemId, this.economy);
+    if (result.ok) {
+      this.shop.applyNewDefenseBonuses(this.base);
+      this.syncLoadout();
+    }
+    this.emitSnapshot();
+  }
+
+  equipShopItem(itemId: string): void {
+    const result = this.shop.equip(itemId as ShopItemId);
+    if (result.ok) {
+      this.syncLoadout();
+    }
+    this.emitSnapshot();
   }
 
   beginPrototypeSession(): void {
@@ -239,7 +270,27 @@ export class Game {
     this.waves.reset();
     this.bosses.reset();
     this.levels.reset();
-    this.turret = new Turret(BALANCING.canvas.width, BALANCING.canvas.height);
+    this.shop.reset();
+    this.turret = new Turret(
+      BALANCING.canvas.width,
+      BALANCING.canvas.height,
+      this.shop.getWeaponStats(),
+    );
+    this.syncLoadout();
+  }
+
+  private syncLoadout(): void {
+    const weapon = this.shop.getWeaponStats();
+    this.turret.setWeapon(weapon);
+    this.entities.setWeaponStats(weapon);
+    const special = this.shop.getSpecialModifiers();
+    this.economy.setCreditMultiplier(special.creditMultiplier);
+    this.economy.setComboDecayBonus(special.comboDecayBonus);
+    const defense = this.shop.getDefenseModifiers();
+    this.threats.setDefenseModifiers(
+      defense.bombDamageReduction,
+      defense.breachRateMultiplier,
+    );
   }
 
   private triggerGameOver(): void {
@@ -255,6 +306,7 @@ export class Game {
       'paused',
       'gameOver',
       'levelComplete',
+      'shop',
     ];
 
     if (passiveScreens.includes(this.screen)) {
@@ -416,7 +468,7 @@ export class Game {
       breach: this.base.breach,
       maxBreach: this.base.maxBreach,
       combo: this.economy.getCombo(),
-      weaponName: MACHINE_GUN.name,
+      weaponName: this.turret.getWeapon().name,
       heat: this.turret.state.heat,
       maxHeat: this.turret.state.maxHeat,
       secondaryCooldown: 0,
@@ -443,6 +495,8 @@ export class Game {
       bossPhase: boss?.phase ?? 0,
       bossShieldActive: boss?.shieldActive ?? false,
       bossName: MOTHERSHIP_BOSS.name,
+      showShop: this.screen === 'shop',
+      shopItems: this.shop.getShopItems(this.economy.credits),
     });
   }
 }

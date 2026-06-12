@@ -37,14 +37,33 @@ export class EconomyManager {
   private shotsFired = 0;
   private shotsHit = 0;
   private lastLevelSummary: LevelSummary | null = null;
+  private creditMultiplier = 1;
+  private comboDecayBonus = 0;
 
   reset(): void {
     this.score = 0;
     this.credits = BALANCING.economy.startingCredits;
+    this.creditMultiplier = 1;
+    this.comboDecayBonus = 0;
     this.resetCombo();
     this.comboTimer = 0;
     this.lastLevelSummary = null;
     this.resetLevelTracking();
+  }
+
+  setCreditMultiplier(multiplier: number): void {
+    this.creditMultiplier = Math.max(1, multiplier);
+  }
+
+  setComboDecayBonus(bonus: number): void {
+    this.comboDecayBonus = Math.max(0, bonus);
+  }
+
+  spendCredits(amount: number): boolean {
+    if (amount <= 0) return true;
+    if (this.credits < amount) return false;
+    this.credits -= amount;
+    return true;
   }
 
   beginLevel(): void {
@@ -73,7 +92,7 @@ export class EconomyManager {
 
   registerKill(baseScore: number, creditReward: number): KillReward {
     this.killStreak += 1;
-    this.comboTimer = BALANCING.combo.decayTime;
+    this.comboTimer = BALANCING.combo.decayTime + this.comboDecayBonus;
 
     const step = BALANCING.combo.killsPerStep;
     this.combo = Math.min(
@@ -82,27 +101,25 @@ export class EconomyManager {
     );
 
     const score = Math.floor(baseScore * this.combo);
+    const credits = this.grantCredits(creditReward);
     this.score += score;
-    this.credits += creditReward;
     this.levelKills += 1;
-    this.levelKillCredits += creditReward;
+    this.levelKillCredits += credits;
 
-    return { score, credits: creditReward };
+    return { score, credits };
   }
 
   awardBossDefeat(scoreBonus: number, levelId: number): KillReward {
-    const credits = getBossDefeatCredits(levelId);
+    const credits = this.grantCredits(getBossDefeatCredits(levelId));
     this.score += scoreBonus;
-    this.credits += credits;
     this.levelBossCredits += credits;
     return { score: scoreBonus, credits };
   }
 
   awardWaveClear(clearBonus: number): WaveReward {
     const score = Math.floor(clearBonus * BALANCING.scoring.waveClearMultiplier);
-    const credits = getWaveClearCredits(clearBonus);
+    const credits = this.grantCredits(getWaveClearCredits(clearBonus));
     this.score += score;
-    this.credits += credits;
     this.levelWaveCredits += credits;
     return { score, credits };
   }
@@ -116,8 +133,7 @@ export class EconomyManager {
     this.levelScoreBonus = scoreBonus;
     this.score += scoreBonus;
 
-    const levelCompleteCredits = getLevelCompleteCredits(levelId);
-    this.credits += levelCompleteCredits;
+    const levelCompleteCredits = this.grantCredits(getLevelCompleteCredits(levelId));
     this.levelCompleteCredits = levelCompleteCredits;
 
     const accuracyPercent = this.getAccuracyPercent();
@@ -125,17 +141,14 @@ export class EconomyManager {
       accuracyPercent !== null &&
       accuracyPercent >= CREDIT_REWARDS.performance.accuracyThreshold
     ) {
-      this.accuracyBonus = CREDIT_REWARDS.performance.accuracyBonus;
-      this.credits += this.accuracyBonus;
+      this.accuracyBonus = this.grantCredits(CREDIT_REWARDS.performance.accuracyBonus);
     }
 
     const breachRatio = maxBreach > 0 ? breach / maxBreach : 0;
     if (breach <= 0) {
-      this.breachBonus = CREDIT_REWARDS.performance.flawlessBreachBonus;
-      this.credits += this.breachBonus;
+      this.breachBonus = this.grantCredits(CREDIT_REWARDS.performance.flawlessBreachBonus);
     } else if (breachRatio <= CREDIT_REWARDS.performance.lowBreachRatio) {
-      this.breachBonus = CREDIT_REWARDS.performance.lowBreachBonus;
-      this.credits += this.breachBonus;
+      this.breachBonus = this.grantCredits(CREDIT_REWARDS.performance.lowBreachBonus);
     }
 
     const summary: LevelSummary = {
@@ -182,6 +195,12 @@ export class EconomyManager {
     this.breachBonus = 0;
     this.shotsFired = 0;
     this.shotsHit = 0;
+  }
+
+  private grantCredits(baseAmount: number): number {
+    const credits = Math.floor(baseAmount * this.creditMultiplier);
+    this.credits += credits;
+    return credits;
   }
 
   private resetCombo(): void {

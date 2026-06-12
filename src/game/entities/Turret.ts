@@ -1,23 +1,36 @@
 import { BALANCING } from '../data/balancing';
-import { MACHINE_GUN, TURRET_CONFIG } from '../data/turretConfig';
+import { TURRET_CONFIG } from '../data/turretConfig';
+import type { WeaponStats } from '../data/weapons';
 import type { InputState, MuzzleFlash, TurretState } from '../types';
 import { angleBetween, clamp, lerpAngle, normalizeAngle, pointFromAngle } from '../../utils/math';
 
 export class Turret {
   readonly state: TurretState;
+  private weapon: WeaponStats;
   private keyboardAngle: number | null = null;
 
-  constructor(canvasWidth: number, canvasHeight: number) {
+  constructor(canvasWidth: number, canvasHeight: number, weapon: WeaponStats) {
+    this.weapon = weapon;
     this.state = {
       x: canvasWidth / 2,
       y: canvasHeight - BALANCING.turret.offsetY,
       angle: -Math.PI / 2,
       targetAngle: -Math.PI / 2,
       heat: 0,
-      maxHeat: MACHINE_GUN.maxHeat,
+      maxHeat: weapon.maxHeat,
       cooling: false,
       lastFireTime: 0,
     };
+  }
+
+  setWeapon(weapon: WeaponStats): void {
+    this.weapon = weapon;
+    this.state.maxHeat = weapon.maxHeat;
+    this.state.heat = Math.min(this.state.heat, weapon.maxHeat);
+  }
+
+  getWeapon(): WeaponStats {
+    return this.weapon;
   }
 
   resize(canvasWidth: number, canvasHeight: number): void {
@@ -56,9 +69,9 @@ export class Turret {
     this.state.angle = lerpAngle(this.state.angle, this.state.targetAngle, rotT);
 
     if (this.state.heat > 0 && !this.isOverheated()) {
-      this.state.heat = Math.max(0, this.state.heat - MACHINE_GUN.coolRate * dt);
+      this.state.heat = Math.max(0, this.state.heat - this.weapon.coolRate * dt);
     }
-    this.state.cooling = this.state.heat > MACHINE_GUN.maxHeat * 0.6;
+    this.state.cooling = this.state.heat > this.weapon.maxHeat * 0.6;
   }
 
   getMuzzlePosition(): { x: number; y: number } {
@@ -71,7 +84,7 @@ export class Turret {
 
   canFire(now: number): boolean {
     if (this.isOverheated()) return false;
-    const interval = 1 / MACHINE_GUN.fireRate;
+    const interval = 1 / this.weapon.fireRate;
     return now - this.state.lastFireTime >= interval;
   }
 
@@ -80,7 +93,10 @@ export class Turret {
   }
 
   applyHeat(): void {
-    this.state.heat = Math.min(this.state.maxHeat, this.state.heat + MACHINE_GUN.heatPerShot);
+    this.state.heat = Math.min(
+      this.state.maxHeat,
+      this.state.heat + this.weapon.heatPerShot,
+    );
   }
 
   markFired(now: number): void {
@@ -93,8 +109,8 @@ export class Turret {
       x: muzzle.x,
       y: muzzle.y,
       angle: this.state.angle,
-      life: MACHINE_GUN.muzzleFlashDuration,
-      maxLife: MACHINE_GUN.muzzleFlashDuration,
+      life: this.weapon.muzzleFlashDuration,
+      maxLife: this.weapon.muzzleFlashDuration,
       active: true,
     };
   }

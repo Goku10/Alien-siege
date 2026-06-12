@@ -2,6 +2,7 @@ import { bombPool, spawnBomb, updateBomb } from '../entities/Bomb';
 import { dropPodPool, spawnDropPod, updateDropPod } from '../entities/DropPod';
 import { groundEnemyPool, spawnGroundEnemy, updateGroundEnemy } from '../entities/GroundEnemy';
 import { applyEnemyModifiers, spawnEnemy, updateEnemy, type EnemySpawnModifiers } from '../entities/Enemy';
+import type { WeaponStats } from '../data/weapons';
 import { spawnProjectile, updateProjectile } from '../entities/Projectile';
 import { getBaseLayout } from '../utils/baseLayout';
 import type {
@@ -17,6 +18,7 @@ import type {
 } from '../types';
 
 export class EntityManager {
+  private weaponStats!: WeaponStats;
   projectiles: ProjectileState[] = [];
   enemies: EnemyState[] = [];
   bombs: BombState[] = [];
@@ -48,8 +50,12 @@ export class EntityManager {
     this.muzzleFlashes.length = 0;
   }
 
+  setWeaponStats(stats: WeaponStats): void {
+    this.weaponStats = stats;
+  }
+
   spawnBullet(x: number, y: number, angle: number): ProjectileState {
-    const bullet = spawnProjectile(x, y, angle);
+    const bullet = spawnProjectile(x, y, angle, this.weaponStats);
     this.projectiles.push(bullet);
     return bullet;
   }
@@ -126,7 +132,7 @@ export class EntityManager {
 
   update(dt: number, boundsW: number, boundsH: number): void {
     this.projectiles = this.projectiles.filter((p) =>
-      p.active && updateProjectile(p, dt, boundsW, boundsH),
+      p.active && updateProjectile(p, dt, boundsW, boundsH, this.weaponStats.trailLength),
     );
 
     this.enemies = this.enemies.filter((e) =>

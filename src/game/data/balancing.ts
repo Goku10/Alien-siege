@@ -19,6 +19,8 @@ export const BALANCING = {
     offsetFromBottom: 8,
     bombDamage: 18,
     breachDangerThreshold: 0.7,
+    /** Each ground unit can contribute at most maxBreach / this value */
+    groundUnitsRequiredForFullBreach: 4,
   },
 
   /** Turret placement offset from bottom */
