@@ -1,3 +1,4 @@
+import type { ShopEffect, UpgradeApplyTiming, UpgradeTierMeta } from './upgradeEffects';
 import type { WeaponId } from './weapons';
 
 export type ShopCategory =
@@ -19,15 +20,19 @@ export type ShopItemId =
   | 'weapon_missile_launcher'
   | 'weapon_flak_cannon'
   | 'weapon_plasma_blaster'
-  | 'upgrade_hardened_rounds'
-  | 'upgrade_cyclone_feed'
-  | 'upgrade_thermal_sink'
-  | 'defense_reinforced_plating'
-  | 'defense_shock_absorbers'
-  | 'defense_perimeter_foam'
-  | 'special_targeting_computer'
+  | 'upgrade_damage_1' | 'upgrade_damage_2' | 'upgrade_damage_3'
+  | 'upgrade_fire_rate_1' | 'upgrade_fire_rate_2' | 'upgrade_fire_rate_3'
+  | 'upgrade_cooling_1' | 'upgrade_cooling_2' | 'upgrade_cooling_3'
+  | 'upgrade_reload_1' | 'upgrade_reload_2'
+  | 'upgrade_splash_1' | 'upgrade_splash_2'
+  | 'defense_health_1' | 'defense_health_2' | 'defense_health_3'
+  | 'defense_breach_1' | 'defense_breach_2' | 'defense_breach_3'
+  | 'defense_shock_1' | 'defense_shock_2'
+  | 'defense_shield_1' | 'defense_shield_2' | 'defense_shield_3'
+  | 'special_combo_1' | 'special_combo_2'
   | 'special_salvage_drone'
-  | 'special_emergency_repairs';
+  | 'special_repair_1' | 'special_repair_2'
+  | 'special_cooldown_1' | 'special_cooldown_2';
 
 export interface ShopItemDefinition {
   id: ShopItemId;
@@ -36,22 +41,25 @@ export interface ShopItemDefinition {
   cost: number;
   description: string;
   statEffect: string;
-  /** Grants a weapon loadout swap */
   weaponId?: WeaponId;
-  /** Starts owned at run start (starter gear) */
   starter?: boolean;
-  /** Only purchasable once */
+  /** One-time purchase per item id (tier items are separate ids) */
   unique: boolean;
   requires?: ShopItemId[];
+  tier?: UpgradeTierMeta;
+  applyTiming?: UpgradeApplyTiming;
   effects: ShopEffect[];
 }
 
-export type ShopEffect =
-  | { type: 'weapon'; field: 'damage' | 'fireRate' | 'maxHeat' | 'coolRate'; op: 'add'; value: number }
-  | { type: 'defense'; field: 'maxHealthBonus' | 'bombDamageReduction' | 'breachRateMultiplier'; op: 'add' | 'multiply'; value: number }
-  | { type: 'special'; field: 'comboDecayBonus' | 'creditMultiplier' | 'betweenLevelHeal'; op: 'add' | 'multiply'; value: number };
+function tier(
+  group: string,
+  tierNum: number,
+  maxTier: number,
+): UpgradeTierMeta {
+  return { group, tier: tierNum, maxTier };
+}
 
-export const SHOP_ITEMS: ShopItemDefinition[] = [
+const WEAPON_ITEMS: ShopItemDefinition[] = [
   {
     id: 'weapon_machine_gun',
     category: 'weapons',
@@ -108,78 +116,351 @@ export const SHOP_ITEMS: ShopItemDefinition[] = [
     unique: true,
     effects: [],
   },
+];
+
+const WEAPON_UPGRADES: ShopItemDefinition[] = [
   {
-    id: 'upgrade_hardened_rounds',
+    id: 'upgrade_damage_1',
     category: 'weapon_upgrades',
-    name: 'Hardened Rounds',
-    cost: 95,
-    description: 'Ammunition tuned for thicker alien hull plating.',
-    statEffect: '+2 projectile damage',
+    name: 'Hardened Rounds I',
+    cost: 85,
+    description: 'Improved kinetic cores for all equipped weapons.',
+    statEffect: '+2 damage',
     unique: true,
+    tier: tier('damage', 1, 3),
+    applyTiming: 'immediate',
     effects: [{ type: 'weapon', field: 'damage', op: 'add', value: 2 }],
   },
   {
-    id: 'upgrade_cyclone_feed',
+    id: 'upgrade_damage_2',
     category: 'weapon_upgrades',
-    name: 'Cyclone Feed',
-    cost: 120,
-    description: 'Faster belt cycle keeps pressure on incoming waves.',
-    statEffect: '+2 shots per second',
+    name: 'Hardened Rounds II',
+    cost: 135,
+    description: 'Tungsten-capped rounds punch through thicker armor.',
+    statEffect: '+3 damage',
     unique: true,
+    requires: ['upgrade_damage_1'],
+    tier: tier('damage', 2, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'weapon', field: 'damage', op: 'add', value: 3 }],
+  },
+  {
+    id: 'upgrade_damage_3',
+    category: 'weapon_upgrades',
+    name: 'Hardened Rounds III',
+    cost: 195,
+    description: 'Alien-alloy penetrators for maximum impact.',
+    statEffect: '+4 damage',
+    unique: true,
+    requires: ['upgrade_damage_2'],
+    tier: tier('damage', 3, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'weapon', field: 'damage', op: 'add', value: 4 }],
+  },
+  {
+    id: 'upgrade_fire_rate_1',
+    category: 'weapon_upgrades',
+    name: 'Cyclone Feed I',
+    cost: 100,
+    description: 'Faster ammunition cycle for sustained pressure.',
+    statEffect: '+1.5 fire rate',
+    unique: true,
+    tier: tier('fire_rate', 1, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'weapon', field: 'fireRate', op: 'add', value: 1.5 }],
+  },
+  {
+    id: 'upgrade_fire_rate_2',
+    category: 'weapon_upgrades',
+    name: 'Cyclone Feed II',
+    cost: 155,
+    description: 'High-speed feeder assembly.',
+    statEffect: '+2 fire rate',
+    unique: true,
+    requires: ['upgrade_fire_rate_1'],
+    tier: tier('fire_rate', 2, 3),
+    applyTiming: 'immediate',
     effects: [{ type: 'weapon', field: 'fireRate', op: 'add', value: 2 }],
   },
   {
-    id: 'upgrade_thermal_sink',
+    id: 'upgrade_fire_rate_3',
     category: 'weapon_upgrades',
-    name: 'Thermal Sink',
-    cost: 85,
-    description: 'Dissipates barrel heat for longer sustained fire.',
-    statEffect: '+15 max heat · +10 cool rate',
+    name: 'Cyclone Feed III',
+    cost: 220,
+    description: 'Overclocked feed — watch heat buildup.',
+    statEffect: '+2.5 fire rate',
     unique: true,
+    requires: ['upgrade_fire_rate_2'],
+    tier: tier('fire_rate', 3, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'weapon', field: 'fireRate', op: 'add', value: 2.5 }],
+  },
+  {
+    id: 'upgrade_cooling_1',
+    category: 'weapon_upgrades',
+    name: 'Thermal Sink I',
+    cost: 80,
+    description: 'Better heat dissipation for longer bursts.',
+    statEffect: '+10 cool rate · +10 max heat',
+    unique: true,
+    tier: tier('cooling', 1, 3),
+    applyTiming: 'immediate',
     effects: [
-      { type: 'weapon', field: 'maxHeat', op: 'add', value: 15 },
       { type: 'weapon', field: 'coolRate', op: 'add', value: 10 },
+      { type: 'weapon', field: 'maxHeat', op: 'add', value: 10 },
     ],
   },
   {
-    id: 'defense_reinforced_plating',
+    id: 'upgrade_cooling_2',
+    category: 'weapon_upgrades',
+    name: 'Thermal Sink II',
+    cost: 125,
+    description: 'Liquid cooling loops around the barrel.',
+    statEffect: '+12 cool rate · +12 max heat',
+    unique: true,
+    requires: ['upgrade_cooling_1'],
+    tier: tier('cooling', 2, 3),
+    applyTiming: 'immediate',
+    effects: [
+      { type: 'weapon', field: 'coolRate', op: 'add', value: 12 },
+      { type: 'weapon', field: 'maxHeat', op: 'add', value: 12 },
+    ],
+  },
+  {
+    id: 'upgrade_cooling_3',
+    category: 'weapon_upgrades',
+    name: 'Thermal Sink III',
+    cost: 175,
+    description: 'Cryo vents dump heat almost instantly.',
+    statEffect: '+15 cool rate · +15 max heat',
+    unique: true,
+    requires: ['upgrade_cooling_2'],
+    tier: tier('cooling', 3, 3),
+    applyTiming: 'immediate',
+    effects: [
+      { type: 'weapon', field: 'coolRate', op: 'add', value: 15 },
+      { type: 'weapon', field: 'maxHeat', op: 'add', value: 15 },
+    ],
+  },
+  {
+    id: 'upgrade_reload_1',
+    category: 'weapon_upgrades',
+    name: 'Quick Loader I',
+    cost: 110,
+    description: 'Servo-assisted reload for magazine weapons.',
+    statEffect: '-10% reload time',
+    unique: true,
+    tier: tier('reload', 1, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'special', field: 'reloadSpeedMultiplier', op: 'multiply', value: 0.9 }],
+  },
+  {
+    id: 'upgrade_reload_2',
+    category: 'weapon_upgrades',
+    name: 'Quick Loader II',
+    cost: 165,
+    description: 'Auto-racking cuts downtime between volleys.',
+    statEffect: '-18% reload time',
+    unique: true,
+    requires: ['upgrade_reload_1'],
+    tier: tier('reload', 2, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'special', field: 'reloadSpeedMultiplier', op: 'multiply', value: 0.82 }],
+  },
+  {
+    id: 'upgrade_splash_1',
+    category: 'weapon_upgrades',
+    name: 'Blast Radius I',
+    cost: 120,
+    description: 'High-explosive tips widen impact area.',
+    statEffect: '+8 splash radius',
+    unique: true,
+    tier: tier('splash', 1, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'weapon', field: 'splashRadius', op: 'add', value: 8 }],
+  },
+  {
+    id: 'upgrade_splash_2',
+    category: 'weapon_upgrades',
+    name: 'Blast Radius II',
+    cost: 180,
+    description: 'Fragmentation sleeves amplify AoE damage.',
+    statEffect: '+12 splash radius',
+    unique: true,
+    requires: ['upgrade_splash_1'],
+    tier: tier('splash', 2, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'weapon', field: 'splashRadius', op: 'add', value: 12 }],
+  },
+];
+
+const DEFENSE_UPGRADES: ShopItemDefinition[] = [
+  {
+    id: 'defense_health_1',
     category: 'defense_upgrades',
-    name: 'Reinforced Plating',
-    cost: 130,
-    description: 'Bolsters base shielding against bomb impacts.',
+    name: 'Reinforced Plating I',
+    cost: 110,
+    description: 'Structural bracing for the base perimeter.',
+    statEffect: '+20 max base health',
+    unique: true,
+    tier: tier('health', 1, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'maxHealthBonus', op: 'add', value: 20 }],
+  },
+  {
+    id: 'defense_health_2',
+    category: 'defense_upgrades',
+    name: 'Reinforced Plating II',
+    cost: 160,
+    description: 'Composite armor panels.',
     statEffect: '+25 max base health',
     unique: true,
+    requires: ['defense_health_1'],
+    tier: tier('health', 2, 3),
+    applyTiming: 'immediate',
     effects: [{ type: 'defense', field: 'maxHealthBonus', op: 'add', value: 25 }],
   },
   {
-    id: 'defense_shock_absorbers',
+    id: 'defense_health_3',
     category: 'defense_upgrades',
-    name: 'Shock Absorbers',
-    cost: 100,
-    description: 'Dampens kinetic shock from direct bomb hits.',
-    statEffect: '-20% bomb damage taken',
+    name: 'Reinforced Plating III',
+    cost: 220,
+    description: 'Bunker-grade fortification.',
+    statEffect: '+30 max base health',
     unique: true,
-    effects: [{ type: 'defense', field: 'bombDamageReduction', op: 'add', value: 0.2 }],
+    requires: ['defense_health_2'],
+    tier: tier('health', 3, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'maxHealthBonus', op: 'add', value: 30 }],
   },
   {
-    id: 'defense_perimeter_foam',
+    id: 'defense_breach_1',
     category: 'defense_upgrades',
-    name: 'Perimeter Foam',
-    cost: 110,
-    description: 'Slows ground units chewing through the breach line.',
-    statEffect: '-15% ground breach rate',
+    name: 'Perimeter Foam I',
+    cost: 95,
+    description: 'Slows ground units at the breach line.',
+    statEffect: '-10% breach fill rate',
     unique: true,
+    tier: tier('breach', 1, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'breachRateMultiplier', op: 'multiply', value: 0.9 }],
+  },
+  {
+    id: 'defense_breach_2',
+    category: 'defense_upgrades',
+    name: 'Perimeter Foam II',
+    cost: 140,
+    description: 'Expanding sealant retards alien tunneling.',
+    statEffect: '-12% breach fill rate',
+    unique: true,
+    requires: ['defense_breach_1'],
+    tier: tier('breach', 2, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'breachRateMultiplier', op: 'multiply', value: 0.88 }],
+  },
+  {
+    id: 'defense_breach_3',
+    category: 'defense_upgrades',
+    name: 'Perimeter Foam III',
+    cost: 190,
+    description: 'Full breach-line containment mesh.',
+    statEffect: '-15% breach fill rate',
+    unique: true,
+    requires: ['defense_breach_2'],
+    tier: tier('breach', 3, 3),
+    applyTiming: 'immediate',
     effects: [{ type: 'defense', field: 'breachRateMultiplier', op: 'multiply', value: 0.85 }],
   },
   {
-    id: 'special_targeting_computer',
-    category: 'special_systems',
-    name: 'Targeting Computer',
-    cost: 140,
-    description: 'Tracks kill chains longer for higher combo windows.',
-    statEffect: '+1.0s combo decay time',
+    id: 'defense_shock_1',
+    category: 'defense_upgrades',
+    name: 'Shock Absorbers I',
+    cost: 100,
+    description: 'Dampens bomb impact shock.',
+    statEffect: '-12% bomb damage',
     unique: true,
-    effects: [{ type: 'special', field: 'comboDecayBonus', op: 'add', value: 1.0 }],
+    tier: tier('shock', 1, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'bombDamageReduction', op: 'add', value: 0.12 }],
+  },
+  {
+    id: 'defense_shock_2',
+    category: 'defense_upgrades',
+    name: 'Shock Absorbers II',
+    cost: 150,
+    description: 'Hydraulic mounts absorb heavy ordnance.',
+    statEffect: '-15% bomb damage',
+    unique: true,
+    requires: ['defense_shock_1'],
+    tier: tier('shock', 2, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'bombDamageReduction', op: 'add', value: 0.15 }],
+  },
+  {
+    id: 'defense_shield_1',
+    category: 'defense_upgrades',
+    name: 'Shield Capacitor I',
+    cost: 125,
+    description: 'Auxiliary energy shields around the base.',
+    statEffect: '+18 shield capacity',
+    unique: true,
+    tier: tier('shield', 1, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'shieldCapacityBonus', op: 'add', value: 18 }],
+  },
+  {
+    id: 'defense_shield_2',
+    category: 'defense_upgrades',
+    name: 'Shield Capacitor II',
+    cost: 175,
+    description: 'Expanded capacitor banks.',
+    statEffect: '+22 shield capacity',
+    unique: true,
+    requires: ['defense_shield_1'],
+    tier: tier('shield', 2, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'shieldCapacityBonus', op: 'add', value: 22 }],
+  },
+  {
+    id: 'defense_shield_3',
+    category: 'defense_upgrades',
+    name: 'Shield Capacitor III',
+    cost: 235,
+    description: 'Maximum shield lattice output.',
+    statEffect: '+28 shield capacity',
+    unique: true,
+    requires: ['defense_shield_2'],
+    tier: tier('shield', 3, 3),
+    applyTiming: 'immediate',
+    effects: [{ type: 'defense', field: 'shieldCapacityBonus', op: 'add', value: 28 }],
+  },
+];
+
+const SPECIAL_UPGRADES: ShopItemDefinition[] = [
+  {
+    id: 'special_combo_1',
+    category: 'special_systems',
+    name: 'Targeting Computer I',
+    cost: 120,
+    description: 'Extended kill-chain tracking window.',
+    statEffect: '+0.7s combo decay',
+    unique: true,
+    tier: tier('combo', 1, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'special', field: 'comboDecayBonus', op: 'add', value: 0.7 }],
+  },
+  {
+    id: 'special_combo_2',
+    category: 'special_systems',
+    name: 'Targeting Computer II',
+    cost: 175,
+    description: 'Predictive targeting extends combo chains.',
+    statEffect: '+0.9s combo decay',
+    unique: true,
+    requires: ['special_combo_1'],
+    tier: tier('combo', 2, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'special', field: 'comboDecayBonus', op: 'add', value: 0.9 }],
   },
   {
     id: 'special_salvage_drone',
@@ -189,20 +470,75 @@ export const SHOP_ITEMS: ShopItemDefinition[] = [
     description: 'Recovers extra scrap from destroyed hostiles.',
     statEffect: '+15% credits earned',
     unique: true,
+    applyTiming: 'immediate',
     effects: [{ type: 'special', field: 'creditMultiplier', op: 'multiply', value: 1.15 }],
   },
   {
-    id: 'special_emergency_repairs',
+    id: 'special_repair_1',
     category: 'special_systems',
-    name: 'Emergency Repairs',
-    cost: 150,
-    description: 'Field crew patches the base between deployments.',
-    statEffect: '+30 base health after each shop visit',
+    name: 'Field Repair I',
+    cost: 130,
+    description: 'Crew patches the base between deployments.',
+    statEffect: '+22 HP after each shop',
     unique: true,
+    tier: tier('repair', 1, 2),
+    applyTiming: 'next_level',
+    effects: [{ type: 'special', field: 'betweenLevelHeal', op: 'add', value: 22 }],
+  },
+  {
+    id: 'special_repair_2',
+    category: 'special_systems',
+    name: 'Field Repair II',
+    cost: 185,
+    description: 'Mobile repair rigs restore more integrity.',
+    statEffect: '+30 HP after each shop',
+    unique: true,
+    requires: ['special_repair_1'],
+    tier: tier('repair', 2, 2),
+    applyTiming: 'next_level',
     effects: [{ type: 'special', field: 'betweenLevelHeal', op: 'add', value: 30 }],
   },
+  {
+    id: 'special_cooldown_1',
+    category: 'special_systems',
+    name: 'Combat Coolant I',
+    cost: 115,
+    description: 'Global cooldown reduction for all systems.',
+    statEffect: '-8% reload & cooldown',
+    unique: true,
+    tier: tier('cooldown', 1, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'special', field: 'cooldownReduction', op: 'add', value: 0.08 }],
+  },
+  {
+    id: 'special_cooldown_2',
+    category: 'special_systems',
+    name: 'Combat Coolant II',
+    cost: 170,
+    description: 'Cryo injectors speed every weapon cycle.',
+    statEffect: '-12% reload & cooldown',
+    unique: true,
+    requires: ['special_cooldown_1'],
+    tier: tier('cooldown', 2, 2),
+    applyTiming: 'immediate',
+    effects: [{ type: 'special', field: 'cooldownReduction', op: 'add', value: 0.12 }],
+  },
+];
+
+export const SHOP_ITEMS: ShopItemDefinition[] = [
+  ...WEAPON_ITEMS,
+  ...WEAPON_UPGRADES,
+  ...DEFENSE_UPGRADES,
+  ...SPECIAL_UPGRADES,
 ];
 
 export const SHOP_ITEM_MAP = Object.fromEntries(
   SHOP_ITEMS.map((item) => [item.id, item]),
 ) as Record<ShopItemId, ShopItemDefinition>;
+
+/** All item ids in a tier group, sorted by tier */
+export function getTierChain(group: string): ShopItemDefinition[] {
+  return SHOP_ITEMS
+    .filter((item) => item.tier?.group === group)
+    .sort((a, b) => (a.tier?.tier ?? 0) - (b.tier?.tier ?? 0));
+}

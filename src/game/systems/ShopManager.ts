@@ -2,17 +2,19 @@ import {
   SHOP_CATEGORY_LABELS,
   SHOP_ITEM_MAP,
   SHOP_ITEMS,
-  type ShopCategory,
   type ShopItemDefinition,
   type ShopItemId,
 } from '../data/shopItems';
-import { WEAPONS, type WeaponId, type WeaponStats } from '../data/weapons';
+import type { WeaponId } from '../data/weapons';
 import type { ShopItemState, ShopItemView } from '../types';
 import type { BaseDefenseSystem } from './BaseDefenseSystem';
 import type { EconomyManager } from './EconomyManager';
+import { LoadoutResolver } from './LoadoutResolver';
+import { buildLoadoutStatPreview } from './ShopStatPreview';
 
 export interface DefenseModifiers {
   maxHealthBonus: number;
+  shieldCapacityBonus: number;
   bombDamageReduction: number;
   breachRateMultiplier: number;
 }
@@ -21,11 +23,13 @@ export interface SpecialModifiers {
   comboDecayBonus: number;
   creditMultiplier: number;
   betweenLevelHeal: number;
+  cooldownReduction: number;
+  reloadSpeedMultiplier: number;
 }
 
 export type ShopActionResult =
   | { ok: true }
-  | { ok: false; reason: 'not_found' | 'already_owned' | 'cannot_afford' | 'locked' | 'not_owned' | 'already_equipped' };
+  | { ok: false; reason: 'not_found' | 'already_owned' | 'cannot_afford' | 'locked' | 'not_owned' | 'already_equipped' | 'tier_blocked' };
 
 export class ShopManager {
   private owned = new Set<ShopItemId>();
@@ -49,76 +53,34 @@ export class ShopManager {
     return this.equippedWeaponId;
   }
 
-  getWeaponStats(): WeaponStats {
-    const base = { ...WEAPONS[this.equippedWeaponId] };
-    for (const itemId of this.owned) {
-      const item = SHOP_ITEM_MAP[itemId];
-      if (!item || item.category !== 'weapon_upgrades') continue;
-      for (const effect of item.effects) {
-        if (effect.type !== 'weapon' || effect.op !== 'add') continue;
-        base[effect.field] += effect.value;
-      }
-    }
-    return base;
+  getOwnedIds(): ShopItemId[] {
+    return [...this.owned];
+  }
+
+  getWeaponStats() {
+    return LoadoutResolver.resolve(this.equippedWeaponId, this.owned).weapon;
   }
 
   getDefenseModifiers(): DefenseModifiers {
-    const mods: DefenseModifiers = {
-      maxHealthBonus: 0,
-      bombDamageReduction: 0,
-      breachRateMultiplier: 1,
-    };
-    for (const itemId of this.owned) {
-      const item = SHOP_ITEM_MAP[itemId];
-      if (!item || item.category !== 'defense_upgrades') continue;
-      this.applyDefenseEffects(mods, item.effects);
-    }
-    return mods;
+    const { defense } = LoadoutResolver.resolve(this.equippedWeaponId, this.owned);
+    return defense;
   }
 
   getSpecialModifiers(): SpecialModifiers {
-    const mods: SpecialModifiers = {
-      comboDecayBonus: 0,
-      creditMultiplier: 1,
-      betweenLevelHeal: 0,
-    };
-    for (const itemId of this.owned) {
-      const item = SHOP_ITEM_MAP[itemId];
-      if (!item || item.category !== 'special_systems') continue;
-      for (const effect of item.effects) {
-        if (effect.type !== 'special') continue;
-        if (effect.op === 'add') {
-          mods[effect.field] += effect.value;
-        } else {
-          mods[effect.field] *= effect.value;
-        }
-      }
-    }
-    return mods;
+    const { special } = LoadoutResolver.resolve(this.equippedWeaponId, this.owned);
+    return special;
   }
 
   getShopItems(credits: number): ShopItemView[] {
     return SHOP_ITEMS.map((item) => this.toView(item, credits));
   }
 
-  getShopItemsByCategory(credits: number): Record<ShopCategory, ShopItemView[]> {
-    const grouped: Record<ShopCategory, ShopItemView[]> = {
-      weapons: [],
-      weapon_upgrades: [],
-      defense_upgrades: [],
-      special_systems: [],
-    };
-    for (const item of this.getShopItems(credits)) {
-      grouped[item.category].push(item);
-    }
-    return grouped;
-  }
-
   purchase(itemId: ShopItemId, economy: EconomyManager): ShopActionResult {
     const item = SHOP_ITEM_MAP[itemId];
     if (!item) return { ok: false, reason: 'not_found' };
-    if (item.unique && this.owned.has(itemId)) return { ok: false, reason: 'already_owned' };
+    if (this.owned.has(itemId)) return { ok: false, reason: 'already_owned' };
     if (!this.meetsRequirements(item)) return { ok: false, reason: 'locked' };
+    if (this.isTierBlocked(item)) return { ok: false, reason: 'tier_blocked' };
     if (item.cost > 0 && !economy.spendCredits(item.cost)) {
       return { ok: false, reason: 'cannot_afford' };
     }
@@ -147,7 +109,8 @@ export class ShopManager {
       const item = SHOP_ITEM_MAP[itemId];
       if (!item || item.category !== 'defense_upgrades') continue;
       for (const effect of item.effects) {
-        if (effect.type === 'defense' && effect.field === 'maxHealthBonus' && effect.op === 'add') {
+        if (effect.type !== 'defense' || effect.op !== 'add') continue;
+        if (effect.field === 'maxHealthBonus' || effect.field === 'shieldCapacityBonus') {
           base.addMaxHealth(effect.value);
         }
       }
@@ -163,18 +126,49 @@ export class ShopManager {
   private toView(item: ShopItemDefinition, credits: number): ShopItemView {
     const owned = this.owned.has(item.id);
     const locked = !this.meetsRequirements(item);
+    const tierBlocked = this.isTierBlocked(item);
     const equipped = Boolean(item.weaponId && this.equippedWeaponId === item.weaponId);
-    const affordable = !locked && (!item.unique || !owned) && credits >= item.cost;
+    const isMaxTier = Boolean(item.tier && owned && item.tier.tier === item.tier.maxTier);
+
+    const canBuyWeapon =
+      Boolean(item.weaponId) &&
+      !owned &&
+      !locked &&
+      item.cost > 0 &&
+      credits >= item.cost;
+
+    const canBuyUpgrade =
+      !item.weaponId &&
+      !owned &&
+      !locked &&
+      !tierBlocked &&
+      item.cost > 0 &&
+      credits >= item.cost;
+
+    const canEquip = Boolean(item.weaponId && owned && !equipped);
 
     let state: ShopItemState;
     if (equipped) state = 'equipped';
-    else if (owned && item.unique) state = 'owned';
-    else if (locked) state = 'locked';
-    else if (affordable || item.cost === 0) state = 'affordable';
-    else state = 'unaffordable';
+    else if (owned && isMaxTier) state = 'maxed';
+    else if (owned) state = 'owned';
+    else if (locked || tierBlocked) state = 'locked';
+    else if ((item.weaponId ? canBuyWeapon : canBuyUpgrade)) state = 'affordable';
+    else if (item.cost > 0) state = 'unaffordable';
+    else state = 'affordable';
 
-    const canBuy = !owned && !locked && item.cost > 0 && credits >= item.cost;
-    const canEquip = Boolean(item.weaponId && owned && !equipped);
+    const before = LoadoutResolver.resolve(this.equippedWeaponId, this.owned);
+    let statPreview: import('../types').StatPreview[] = [];
+    if (canBuyUpgrade) {
+      const after = LoadoutResolver.simulatePurchase(
+        this.equippedWeaponId,
+        this.owned,
+        item.id,
+      );
+      statPreview = buildLoadoutStatPreview(before, after);
+    } else if (canBuyWeapon && item.weaponId) {
+      const after = LoadoutResolver.resolve(item.weaponId, this.owned);
+      statPreview = buildLoadoutStatPreview(before, after);
+    }
 
     return {
       id: item.id,
@@ -184,9 +178,12 @@ export class ShopManager {
       cost: item.cost,
       description: item.description,
       statEffect: item.statEffect,
+      tierLabel: item.tier ? `Tier ${item.tier.tier}/${item.tier.maxTier}` : undefined,
+      applyTiming: item.applyTiming,
       state,
-      canBuy,
+      canBuy: canBuyWeapon || canBuyUpgrade,
       canEquip,
+      statPreview,
     };
   }
 
@@ -195,17 +192,18 @@ export class ShopManager {
     return item.requires.every((id) => this.owned.has(id));
   }
 
-  private applyDefenseEffects(
-    mods: DefenseModifiers,
-    effects: ShopItemDefinition['effects'],
-  ): void {
-    for (const effect of effects) {
-      if (effect.type !== 'defense') continue;
-      if (effect.op === 'add') {
-        mods[effect.field] += effect.value;
-      } else {
-        mods[effect.field] *= effect.value;
+  /** Block buying a lower tier when a higher tier in the same group is already owned */
+  private isTierBlocked(item: ShopItemDefinition): boolean {
+    if (!item.tier) return false;
+    for (const ownedId of this.owned) {
+      const ownedItem = SHOP_ITEM_MAP[ownedId];
+      if (
+        ownedItem?.tier?.group === item.tier.group &&
+        ownedItem.tier.tier > item.tier.tier
+      ) {
+        return true;
       }
     }
+    return false;
   }
 }

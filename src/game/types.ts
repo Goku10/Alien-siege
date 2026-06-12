@@ -258,9 +258,16 @@ export interface MuzzleFlash {
 export type ShopItemState =
   | 'equipped'
   | 'owned'
+  | 'maxed'
   | 'affordable'
   | 'unaffordable'
   | 'locked';
+
+export interface StatPreview {
+  label: string;
+  before: string;
+  after: string;
+}
 
 export type ShopCategory =
   | 'weapons'
@@ -276,9 +283,12 @@ export interface ShopItemView {
   cost: number;
   description: string;
   statEffect: string;
+  tierLabel?: string;
+  applyTiming?: 'immediate' | 'next_level';
   state: ShopItemState;
   canBuy: boolean;
   canEquip: boolean;
+  statPreview: StatPreview[];
 }
 
 export interface LevelSummary {

@@ -62,7 +62,7 @@ export function GameCanvas() {
         />
       )}
       {screen === 'playing' && (
-        <div className="prototype-badge">Phase 8 — Weapon Arsenal</div>
+        <div className="prototype-badge">Phase 9 — Tiered Upgrades</div>
       )}
     </div>
   );

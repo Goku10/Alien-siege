@@ -66,19 +66,20 @@ src/
 | `src/game/data/enemies.ts` | Enemy type definitions (HP, speed, patterns, score) |
 | `src/game/data/levels.ts` | Level wave schedules and bonuses |
 | `src/game/data/credits.ts` | Credit earn rates (kills, waves, boss, bonuses) |
-| `src/game/data/shopItems.ts` | Shop catalog (costs, categories, stat effects) |
+| `src/game/data/shopItems.ts` | Shop catalog + tiered upgrade chains |
+| `src/game/data/upgradeEffects.ts` | Upgrade effect field definitions |
 | `src/game/data/weapons.ts` | Weapon definitions for shop loadout |
 
-## Current Status — Phase 8 Complete
+## Current Status — Phase 9 Complete
 
-- [x] Phases 1–7: Full campaign loop with shop and credits
-- [x] **Five weapon types** with distinct mechanics (pierce, splash, reload, pellets)
-- [x] Machine Gun (starter), Laser Cannon, Missile Launcher, Flak Cannon, Plasma Blaster
-- [x] Shop unlock + equip; HUD shows weapon name, kind, ammo/reload or heat
+- [x] Phases 1–8: Campaign, shop, credits, five weapon types
+- [x] **Tiered upgrades** — 3-tier chains for core stats, 2-tier for specialist bonuses
+- [x] Effects: damage, fire rate, cooling, reload, splash, HP, shield, breach, bomb resist, combo, cooldown
+- [x] Shop shows tier labels + before → after stat preview on purchasable items
 
 ### Next Phases
 
-- Phase 9: Polish (particles, audio hooks, balance pass)
+- Phase 10: Polish (particles, audio hooks, balance pass)
 
 ## License
 

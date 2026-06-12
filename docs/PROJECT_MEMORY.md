@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 8 complete  
+**Current phase:** Phase 9 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -46,7 +46,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 6 | Credits economy + level-end summary | ✅ Done |
 | 7 | Between-level shop + upgrades | ✅ Done |
 | 8 | Multi-weapon arsenal (5 weapon types) | ✅ Done |
-| 9 | Polish — particles, audio hooks, balance pass | ⏳ Next |
+| 9 | Tiered upgrade system (weapon/defense/special) | ✅ Done |
+| 10 | Polish — particles, audio hooks, balance pass | ⏳ Next |
 
 ---
 
@@ -192,7 +193,20 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 8)
+### Phase 9 — Tiered upgrades
+**Commit:** *(pending)* — *Phase 9: Tiered upgrade system with stat previews.*
+
+**Built:**
+- `upgradeEffects.ts` — effect schema (damage, fire rate, cooling, reload, splash, health, breach, shield, cooldown)
+- `LoadoutResolver` — central stat aggregation from owned upgrades
+- `shopItems.ts` — 3-tier chains for damage/fire/cooling/health/breach/shield; 2-tier for reload/splash/shock/combo/repair/cooldown
+- Tier gating via `requires` + duplicate prevention per tier id
+- `ShopStatPreview` — before → after comparison in shop cards
+- Defense HP/shield applies immediately on purchase; field repair applies on next deploy
+
+---
+
+## Current state (after Phase 9)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
@@ -282,12 +296,11 @@ input → turret → firing → entities.update → flying drops
 
 ---
 
-## Phase 9 preview (next work)
+## Phase 10 preview (next work)
 
 - [ ] Polish pass — particles, audio hooks, balance tuning
-- [ ] Additional weapons / secondary abilities if needed
 
-**Config:** `weapons.ts` for weapon stats; `shopItems.ts` for unlock costs.
+**Config:** `shopItems.ts` + `upgradeEffects.ts` for tier costs/effects; `weapons.ts` for base stats.
 
 ---
 

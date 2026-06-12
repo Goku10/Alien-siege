@@ -33,12 +33,14 @@ function buttonLabel(item: ShopItemView): string {
   switch (item.state) {
     case 'equipped':
       return 'Equipped';
+    case 'maxed':
+      return 'Maxed';
     case 'owned':
       return 'Owned';
     case 'unaffordable':
       return 'Not enough credits';
     case 'locked':
-      return 'Locked';
+      return 'Requires prior tier';
     default:
       return 'Unavailable';
   }
@@ -55,7 +57,7 @@ export function ShopScreen({ snapshot, onContinue, onBuy, onEquip }: ShopScreenP
             <p className="panel__eyebrow">Between Levels</p>
             <h2>Armory Shop</h2>
             <p className="panel__reason">
-              Spend credits on weapons and upgrades before the next assault.
+              Tiered upgrades stack on your loadout. Preview shows before → after values.
             </p>
           </div>
           <div className="shop__credits">
@@ -78,13 +80,35 @@ export function ShopScreen({ snapshot, onContinue, onBuy, onEquip }: ShopScreenP
                       className={`shop-card shop-card--${item.state}`}
                     >
                       <div className="shop-card__header">
-                        <h4 className="shop-card__name">{item.name}</h4>
+                        <div>
+                          <h4 className="shop-card__name">{item.name}</h4>
+                          {item.tierLabel && (
+                            <span className="shop-card__tier">{item.tierLabel}</span>
+                          )}
+                        </div>
                         {item.cost > 0 && (
                           <span className="shop-card__cost">{item.cost} CR</span>
                         )}
                       </div>
                       <p className="shop-card__desc">{item.description}</p>
                       <p className="shop-card__stat">{item.statEffect}</p>
+                      {item.applyTiming === 'next_level' && (
+                        <p className="shop-card__timing">Applies when deploying next level</p>
+                      )}
+                      {item.statPreview.length > 0 && (
+                        <ul className="shop-card__preview">
+                          {item.statPreview.map((row) => (
+                            <li key={row.label} className="shop-card__preview-row">
+                              <span className="shop-card__preview-label">{row.label}</span>
+                              <span className="shop-card__preview-values">
+                                <span className="shop-card__preview-before">{row.before}</span>
+                                <span className="shop-card__preview-arrow">→</span>
+                                <span className="shop-card__preview-after">{row.after}</span>
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                       <button
                         type="button"
                         className={`btn shop-card__btn shop-card__btn--${item.state}`}
