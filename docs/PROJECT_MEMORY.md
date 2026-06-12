@@ -208,7 +208,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 10 — Enemy variety & scaling
-**Commit:** *(pending)* — *Phase 10: Enemy variety, data-driven waves, and level scaling.*
+**Commit:** `dc9a092` — *Phase 10: Enemy variety, data-driven waves, and level scaling.*
 
 **Built:**
 - **3 new flying types** (`enemies.ts`):
@@ -315,7 +315,7 @@ input → turret → firing → entities.update → flying drops
 | `8316102` | 2026-06-12 | Phase 7 — between-level armory shop |
 | `f320e2b` | 2026-06-12 | Phase 8 — multi-weapon arsenal |
 | `c1217ed` | 2026-06-12 | Phase 9 — tiered upgrade system |
-| *(pending)* | 2026-06-12 | Phase 10 — enemy variety, wave composition, scaling |
+| `dc9a092` | 2026-06-12 | Phase 10 — enemy variety, wave composition, scaling |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
