@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 2 complete  
+**Current phase:** Phase 3 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -40,8 +40,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 |-------|--------|--------|
 | 1 | Scaffold, turret prototype, canvas, HUD shell | ✅ Done |
 | 2 | Flying enemies, collisions, waves, score, combo | ✅ Done |
-| 3 | Ground enemies, breach system | ⏳ Next |
-| 4 | Mothership boss fights | Pending |
+| 3 | Ground enemies, breach system | ✅ Done |
+| 4 | Mothership boss fights | ⏳ Next |
 | 5 | Credits economy (separate from score) | Pending |
 | 6 | Between-level shop, weapons, upgrades | Pending |
 | 7 | Polish — particles, audio hooks, balance pass | Pending |
@@ -90,50 +90,71 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 2)
+### Phase 3 — Base defense
+**Commit:** *(pending push)* — *Phase 3: Ground threats, breach system, game over.*
+
+**Built:**
+- **Drop Carriers** drop alien pods (shootable mid-air) → spawn ground enemies on landing
+- **Bomber Ships** drop plasma bombs (shootable) → damage base health on impact
+- **3 ground enemy types** (`src/game/data/groundEnemies.ts`):
+  - Crawler — slow, steady breach pressure at base lane
+  - Spitter — stops in range, damages base health + light breach
+  - Leaper — fast with leap bursts, high breach burst on arrival
+- `BaseDefenseSystem` — base health + breach meter, defeat detection
+- `ThreatSystem` — flying drops, falling bombs/pods, ground movement, base damage
+- Extended `CollisionSystem` — hit flying, ground, bombs, and pods
+- `Bomb`, `DropPod`, `GroundEnemy` entities with object pooling
+- Renderers: `GroundEnemyRenderer`, `ThreatRenderer` (bomb warnings, breach zone)
+- HUD: live base health + breach values, danger alerts, bomb/breach warnings
+- `GameOverScreen` — defeat reason, final score, waves survived, restart/title
+- Lose when **breach ≥ 100** or **base health ≤ 0**
+
+**Intentionally deferred:** shop, bosses, credits earning, shield/brute/spore pod enemies.
+
+---
+
+## Current state (after Phase 3)
 
 ### Playable loop
 1. Title screen → Start Defense
-2. 1s delay → Wave 1 spawns scouts from left/right
-3. Player shoots enemies; score + combo increase on kills
-4. Wave clears when all spawned enemies destroyed or exited → bonus points → 2.5s → next wave
-5. After wave 6, loops back to wave 4 composition
-6. Esc pauses; quit returns to title (full session reset)
+2. Waves spawn flying enemies; carriers/bombers drop pods and bombs
+3. Shoot everything — flyers, bombs, pods (before landing), ground aliens
+4. Ground enemies reach base lane → breach meter rises; spitter also damages base HP
+5. Bombs impact base → base health drops
+6. **Game over** if breach fills or base health hits zero
+7. Try Again restarts session; Esc pauses during play
 
 ### Active systems
 | System | File | Role |
 |--------|------|------|
-| Game | `src/game/Game.ts` | Orchestrates update/render, wires all managers |
-| GameLoop | `src/game/systems/GameLoop.ts` | rAF loop, pause, dt cap |
-| InputManager | `src/game/systems/InputManager.ts` | Mouse + keyboard state |
-| EntityManager | `src/game/systems/EntityManager.ts` | Projectiles, enemies, muzzle flashes |
-| CollisionSystem | `src/game/systems/CollisionSystem.ts` | Bullet hits |
-| WaveManager | `src/game/systems/WaveManager.ts` | Timed spawns, wave progression |
+| Game | `src/game/Game.ts` | Orchestrates update/render, game over |
+| BaseDefenseSystem | `src/game/systems/BaseDefenseSystem.ts` | Health, breach, defeat |
+| ThreatSystem | `src/game/systems/ThreatSystem.ts` | Drops, bombs, pods, ground AI |
+| EntityManager | `src/game/systems/EntityManager.ts` | All entity pools |
+| CollisionSystem | `src/game/systems/CollisionSystem.ts` | Multi-layer bullet hits |
+| WaveManager | `src/game/systems/WaveManager.ts` | Flying wave spawns only |
 | EconomyManager | `src/game/systems/EconomyManager.ts` | Score, combo |
-| EffectsManager | `src/game/systems/EffectsManager.ts` | Particles, explosions, popups |
-| Renderer | `src/game/rendering/Renderer.ts` | Layered canvas draw |
+| EffectsManager | `src/game/systems/EffectsManager.ts` | VFX + warning markers |
+| Renderer | `src/game/rendering/Renderer.ts` | Full layered draw |
 
 ### React UI
 | Component | Role |
 |-----------|------|
-| `GameShell` / `GameCanvas` | Canvas + overlay stack |
-| `TitleScreen` | Start + how-to-play |
-| `GameHUD` | Score, credits (0), level, wave, combo, bars |
+| `GameHUD` | Score, health, breach, danger alerts |
+| `GameOverScreen` | Defeat + restart |
 | `PauseOverlay` | Resume / quit |
-| `useGameCanvas` | Bridges Game ↔ React state |
+| `TitleScreen` | Start + how-to-play |
 
 ### Config / tuning files
 | File | Tune here |
 |------|-----------|
-| `src/game/data/balancing.ts` | Canvas, base stats, combo, wave timing, screen shake |
-| `src/game/data/turretConfig.ts` | Turret rotation, Machine Gun stats |
-| `src/game/data/enemies.ts` | Enemy HP, speed, patterns, score, colors |
-| `src/game/data/levels.ts` | Wave spawn schedules (delays, sides, types) |
+| `src/game/data/balancing.ts` | Base HP, breach, bomb damage, threat speeds |
+| `src/game/data/groundEnemies.ts` | Crawler/spitter/leaper stats |
+| `src/game/data/enemies.ts` | Flyer drops (interval, max drops) |
+| `src/game/utils/baseLayout.ts` | Base/breach zone geometry |
 
-### HUD fields (some placeholders until later phases)
-- **Score** — live from EconomyManager
+### HUD fields (placeholders until later phases)
 - **Credits** — always 0 (Phase 5+)
-- **Breach** — bar shown, never increases (Phase 3)
 - **Level** — fixed at 1
 - **Secondary cooldown** — not implemented
 
@@ -151,8 +172,10 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ### Update order in `Game.update()` (important when extending)
 ```
-input → turret → firing → waves → collision → prune projectiles
-→ entities.update → effects.update → economy.update → shake decay → snapshot
+input → turret → firing → entities.update (flyers move)
+→ flying drops → waves → collision → prune projectiles
+→ threats (bombs, pods, ground, base damage) → effects → economy
+→ defeat check → shake decay → snapshot
 ```
 
 ---
@@ -169,20 +192,14 @@ input → turret → firing → waves → collision → prune projectiles
 
 ---
 
-## Phase 3 preview (next work)
+## Phase 4 preview (next work)
 
-When implementing Phase 3, expect to add:
+- [ ] Mothership boss at end of each level
+- [ ] Boss intro warning, multi-phase patterns
+- [ ] Boss health bar in HUD
+- [ ] Level complete flow (before shop in Phase 6)
 
-- [ ] Ground enemy types (crawler, spitter, brute, leaper, spore pod)
-- [ ] Drop Carrier / Bomber actually dropping payloads
-- [ ] Breach meter increases when ground enemies land / reach base zone
-- [ ] Base health damage from bombs and ranged ground units
-- [ ] Shoot ground targets before they breach
-- [ ] Game over when base HP = 0 or breach meter full
-- [ ] `CollisionSystem` extended for ground layer
-- [ ] New renderers for ground entities and falling bombs/pods
-
-**Do not start in Phase 3:** shop, boss fights, credits spending.
+**Do not start in Phase 4:** shop, credits spending.
 
 ---
 
@@ -208,11 +225,10 @@ When finishing a phase:
 ## Known issues / tech debt
 
 - Credits shown in HUD but never earned (by design until Phase 5).
-- Breach bar is visual-only until Phase 3.
-- Enemies that fly off-screen exit without penalty.
-- Bomber/Carrier drop behavior is visual-only (no payloads yet).
+- Flyers exiting screen without kill causes no penalty.
+- Ground threats persist across wave transitions (intentional pressure).
 - `ShopManager`, `BossManager` are still stubs.
-- No game over screen yet.
+- No brute/spore pod ground types yet.
 - No tests.
 
 ---

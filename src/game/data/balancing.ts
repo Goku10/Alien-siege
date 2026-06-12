@@ -16,6 +16,9 @@ export const BALANCING = {
     maxBreach: 100,
     width: 200,
     height: 80,
+    offsetFromBottom: 8,
+    bombDamage: 18,
+    breachDangerThreshold: 0.7,
   },
 
   /** Turret placement offset from bottom */
@@ -58,5 +61,19 @@ export const BALANCING = {
   effects: {
     shakeDecay: 8,
     maxShake: 12,
+  },
+
+  /** Falling threats */
+  threats: {
+    bombFallSpeed: 220,
+    bombRadius: 10,
+    bombHealth: 12,
+    bombScore: 75,
+    podFallSpeed: 160,
+    podRadius: 14,
+    podHealth: 20,
+    podScore: 50,
+    dropMinX: 180,
+    dropMaxOffsetFromEdge: 180,
   },
 } as const;

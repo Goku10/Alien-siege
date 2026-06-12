@@ -11,9 +11,22 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
   const healthPct = (snapshot.baseHealth / snapshot.maxBaseHealth) * 100;
   const breachPct = (snapshot.breach / snapshot.maxBreach) * 100;
   const heatPct = (snapshot.heat / snapshot.maxHeat) * 100;
+  const healthLow = healthPct <= 30;
+  const breachHigh = snapshot.breachDanger;
 
   return (
     <div className="hud" aria-live="polite">
+      {snapshot.bombWarning && (
+        <div className="hud__alert hud__alert--bomb" role="alert">
+          INCOMING BOMB — SHOOT IT DOWN!
+        </div>
+      )}
+      {breachHigh && (
+        <div className="hud__alert hud__alert--breach" role="alert">
+          BREACH CRITICAL — STOP GROUND THREATS!
+        </div>
+      )}
+
       <div className="hud__top">
         <div className="hud__stat">
           <span className="hud__label">SCORE</span>
@@ -40,8 +53,9 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
       </div>
 
       <div className="hud__bottom">
-        <div className="hud__bar-group">
+        <div className={`hud__bar-group ${healthLow ? 'hud__bar-group--danger' : ''}`}>
           <span className="hud__label">BASE HEALTH</span>
+          <span className="hud__bar-value">{Math.ceil(snapshot.baseHealth)}</span>
           <div className="hud__bar">
             <div
               className="hud__bar-fill hud__bar-fill--health"
@@ -50,8 +64,9 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
           </div>
         </div>
 
-        <div className="hud__bar-group">
+        <div className={`hud__bar-group ${breachHigh ? 'hud__bar-group--danger' : ''}`}>
           <span className="hud__label">BREACH</span>
+          <span className="hud__bar-value">{Math.ceil(snapshot.breach)}%</span>
           <div className="hud__bar">
             <div
               className="hud__bar-fill hud__bar-fill--breach"

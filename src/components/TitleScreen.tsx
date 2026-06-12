@@ -36,8 +36,8 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
             </li>
           </ul>
           <p className="how-to-play__goal">
-            Destroy alien ships and ground threats before they breach your base.
-            Earn credits between levels to upgrade weapons and defenses.
+            Destroy ships, shoot down bombs and pods, and kill ground aliens before
+            they breach the base or bombs destroy your shields.
           </p>
         </section>
       </div>

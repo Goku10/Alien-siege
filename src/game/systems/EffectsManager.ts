@@ -1,5 +1,6 @@
 import { ENEMY_DEFINITIONS } from '../data/enemies';
-import type { EnemyTypeId, Explosion, Particle, ScorePopup } from '../types';
+import { GROUND_ENEMY_DEFINITIONS } from '../data/groundEnemies';
+import type { EnemyTypeId, Explosion, GroundEnemyTypeId, Particle, ScorePopup } from '../types';
 import { ObjectPool } from '../../utils/objectPool';
 
 function createParticle(): Particle {
@@ -29,10 +30,27 @@ function resetPopup(p: ScorePopup): void {
   p.active = true;
 }
 
+interface DropIndicator {
+  x: number;
+  y: number;
+  life: number;
+  maxLife: number;
+  kind: 'bomb' | 'pod';
+}
+
+interface ImpactMarker {
+  x: number;
+  y: number;
+  life: number;
+  maxLife: number;
+}
+
 export class EffectsManager {
   particles: Particle[] = [];
   explosions: Explosion[] = [];
   scorePopups: ScorePopup[] = [];
+  dropIndicators: DropIndicator[] = [];
+  impactMarkers: ImpactMarker[] = [];
 
   private particlePool = new ObjectPool(createParticle, resetParticle, 80);
   private explosionPool = new ObjectPool(createExplosion, resetExplosion, 16);
@@ -42,6 +60,49 @@ export class EffectsManager {
     this.particles.length = 0;
     this.explosions.length = 0;
     this.scorePopups.length = 0;
+    this.dropIndicators.length = 0;
+    this.impactMarkers.length = 0;
+  }
+
+  spawnGroundHitSparks(x: number, y: number, typeId: GroundEnemyTypeId): void {
+    const def = GROUND_ENEMY_DEFINITIONS[typeId];
+    for (let i = 0; i < 4; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 60 + Math.random() * 100;
+      const p = this.particlePool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 0.12 + Math.random() * 0.12;
+      p.maxLife = p.life;
+      p.radius = 1.5 + Math.random() * 1.5;
+      p.color = def.accentColor;
+      this.particles.push(p);
+    }
+  }
+
+  spawnDropIndicator(x: number, y: number, kind: 'bomb' | 'pod'): void {
+    this.dropIndicators.push({ x, y, life: 0.5, maxLife: 0.5, kind });
+  }
+
+  addBombImpactMarker(x: number, y: number): void {
+    this.impactMarkers.push({ x, y, life: 0.6, maxLife: 0.6 });
+  }
+
+  spawnBaseHitEffect(x: number, y: number): void {
+    for (let i = 0; i < 6; i++) {
+      const p = this.particlePool.acquire();
+      p.x = x + (Math.random() - 0.5) * 40;
+      p.y = y;
+      p.vx = (Math.random() - 0.5) * 80;
+      p.vy = -60 - Math.random() * 80;
+      p.life = 0.25;
+      p.maxLife = 0.25;
+      p.radius = 2;
+      p.color = '#ff4466';
+      this.particles.push(p);
+    }
   }
 
   spawnHitSparks(x: number, y: number, enemyType: EnemyTypeId): void {
@@ -137,6 +198,16 @@ export class EffectsManager {
         return false;
       }
       return true;
+    });
+
+    this.dropIndicators = this.dropIndicators.filter((d) => {
+      d.life -= dt;
+      return d.life > 0;
+    });
+
+    this.impactMarkers = this.impactMarkers.filter((m) => {
+      m.life -= dt;
+      return m.life > 0;
     });
   }
 }

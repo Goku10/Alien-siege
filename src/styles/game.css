@@ -53,6 +53,11 @@
   backdrop-filter: blur(6px);
 }
 
+.overlay--game-over {
+  background: rgba(20, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+}
+
 .title-panel {
   text-align: center;
   padding: 2rem;
@@ -185,6 +190,50 @@
   font-size: 0.9rem;
 }
 
+.panel--game-over {
+  max-width: 440px;
+}
+
+.panel__eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-danger);
+  margin-bottom: 0.5rem;
+}
+
+.panel__reason {
+  color: var(--color-text-dim);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.game-over__stats {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.game-over__stat {
+  text-align: center;
+}
+
+.game-over__score {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.game-over__value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 /* HUD */
 .hud {
   position: absolute;
@@ -248,6 +297,38 @@
   to { box-shadow: 0 0 16px rgba(255, 170, 0, 0.5); }
 }
 
+.hud__alert {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  pointer-events: none;
+  animation: alert-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.hud__alert--bomb {
+  color: #ffaa00;
+  background: rgba(80, 30, 0, 0.85);
+  border: 1px solid rgba(255, 170, 0, 0.6);
+}
+
+.hud__alert--breach {
+  color: #ff4466;
+  background: rgba(60, 0, 10, 0.85);
+  border: 1px solid rgba(255, 68, 102, 0.6);
+  top: 42%;
+}
+
+@keyframes alert-pulse {
+  from { opacity: 0.85; }
+  to { opacity: 1; }
+}
+
 .hud__bar-group {
   flex: 1;
   min-width: 140px;
@@ -256,6 +337,18 @@
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 6px 10px;
+}
+
+.hud__bar-group--danger {
+  border-color: rgba(255, 68, 102, 0.7);
+  animation: combo-pulse 0.5s ease-in-out infinite alternate;
+}
+
+.hud__bar-value {
+  float: right;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
 }
 
 .hud__bar {

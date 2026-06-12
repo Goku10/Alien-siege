@@ -1,5 +1,7 @@
 import type { EnemyTypeId, MovementPattern } from '../types';
 
+export type DropKind = 'none' | 'pod' | 'bomb';
+
 export interface EnemyDefinition {
   id: EnemyTypeId;
   name: string;
@@ -14,6 +16,9 @@ export interface EnemyDefinition {
   accentColor: string;
   glowColor: string;
   shakeOnDeath: number;
+  dropKind: DropKind;
+  dropInterval: number;
+  maxDrops: number;
 }
 
 export const ENEMY_DEFINITIONS: Record<EnemyTypeId, EnemyDefinition> = {
@@ -31,6 +36,9 @@ export const ENEMY_DEFINITIONS: Record<EnemyTypeId, EnemyDefinition> = {
     accentColor: '#a78bfa',
     glowColor: 'rgba(167, 139, 250, 0.5)',
     shakeOnDeath: 2,
+    dropKind: 'none',
+    dropInterval: 0,
+    maxDrops: 0,
   },
   drop_carrier: {
     id: 'drop_carrier',
@@ -46,6 +54,9 @@ export const ENEMY_DEFINITIONS: Record<EnemyTypeId, EnemyDefinition> = {
     accentColor: '#52b788',
     glowColor: 'rgba(82, 183, 136, 0.45)',
     shakeOnDeath: 3.5,
+    dropKind: 'pod',
+    dropInterval: 2.6,
+    maxDrops: 3,
   },
   bomber_ship: {
     id: 'bomber_ship',
@@ -61,6 +72,9 @@ export const ENEMY_DEFINITIONS: Record<EnemyTypeId, EnemyDefinition> = {
     accentColor: '#ff6b35',
     glowColor: 'rgba(255, 107, 53, 0.5)',
     shakeOnDeath: 5.5,
+    dropKind: 'bomb',
+    dropInterval: 3.0,
+    maxDrops: 2,
   },
 };
 

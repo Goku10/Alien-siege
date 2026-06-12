@@ -66,20 +66,20 @@ src/
 | `src/game/data/enemies.ts` | Enemy type definitions (HP, speed, patterns, score) |
 | `src/game/data/levels.ts` | Level 1 wave spawn schedules |
 
-## Current Status — Phase 2 Complete
+## Current Status — Phase 3 Complete
 
-- [x] Phase 1: Turret prototype, HUD shell, pause flow
-- [x] 3 flying enemy types (Scout Saucer, Drop Carrier, Bomber Ship)
-- [x] Left/right spawn lanes with movement patterns (sine, bob, arc)
-- [x] Bullet vs enemy collision detection
-- [x] Hit sparks, explosions, score popups, screen shake
-- [x] Score system with combo multiplier (×2–×5)
-- [x] Timed wave spawner (6 waves, loops from wave 4)
-- [x] Wave clear bonuses
+- [x] Phases 1–2: Turret combat, flying enemies, waves, scoring
+- [x] Drop Carriers release alien pods → ground enemies
+- [x] Bomber Ships drop bombs that damage base health
+- [x] Ground threats: Crawler, Spitter, Leaper
+- [x] Breach meter + base health lose conditions
+- [x] Shoot bombs, pods, and ground enemies
+- [x] Visual warnings (bomb incoming, breach critical)
+- [x] Game over screen + restart flow
 
 ### Next Phases
 
-- Phase 3: Ground enemies + breach system
+- Phase 4: Mothership boss fights
 - Phase 4: Boss fights
 - Phase 5: Score/credits economy
 - Phase 6: Shop + upgrades

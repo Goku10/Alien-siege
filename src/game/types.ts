@@ -27,6 +27,12 @@ export type GameScreen =
 
 export type EnemyTypeId = 'scout_saucer' | 'drop_carrier' | 'bomber_ship';
 
+export type GroundEnemyTypeId = 'crawler' | 'spitter' | 'leaper';
+
+export type GroundEnemyBehavior = 'approaching' | 'breaching' | 'attacking';
+
+export type GameOverReason = 'breach' | 'base_destroyed';
+
 export type MovementPattern = 'straight' | 'sine' | 'arc' | 'bob';
 
 export type SpawnSide = 'left' | 'right';
@@ -88,6 +94,60 @@ export interface EnemyState {
   baseY: number;
   scoreValue: number;
   flashTimer: number;
+  dropTimer: number;
+  dropsReleased: number;
+}
+
+export interface BombState {
+  id: number;
+  x: number;
+  y: number;
+  vy: number;
+  radius: number;
+  health: number;
+  maxHealth: number;
+  damage: number;
+  scoreValue: number;
+  active: boolean;
+  flashTimer: number;
+}
+
+export interface DropPodState {
+  id: number;
+  x: number;
+  y: number;
+  vy: number;
+  radius: number;
+  health: number;
+  maxHealth: number;
+  scoreValue: number;
+  payload: GroundEnemyTypeId;
+  active: boolean;
+  flashTimer: number;
+}
+
+export interface GroundEnemyState {
+  id: number;
+  typeId: GroundEnemyTypeId;
+  x: number;
+  y: number;
+  vx: number;
+  health: number;
+  maxHealth: number;
+  radius: number;
+  active: boolean;
+  flashTimer: number;
+  scoreValue: number;
+  breachRate: number;
+  breachBurst: number;
+  attackDamage: number;
+  attackInterval: number;
+  attackRange: number;
+  attackTimer: number;
+  behavior: GroundEnemyBehavior;
+  leapTimer: number;
+  leapDuration: number;
+  targetX: number;
 }
 
 export interface Particle {
@@ -150,4 +210,9 @@ export interface GameSnapshot {
   bossHealth: number;
   bossMaxHealth: number;
   enemiesRemaining: number;
+  groundThreats: number;
+  breachDanger: boolean;
+  bombWarning: boolean;
+  gameOverReason: GameOverReason | null;
+  finalScore: number;
 }

@@ -2,14 +2,16 @@ import { BALANCING } from './data/balancing';
 import { MACHINE_GUN } from './data/turretConfig';
 import { Turret } from './entities/Turret';
 import { Renderer } from './rendering/Renderer';
+import { BaseDefenseSystem } from './systems/BaseDefenseSystem';
 import { CollisionSystem } from './systems/CollisionSystem';
 import { EconomyManager } from './systems/EconomyManager';
 import { EffectsManager } from './systems/EffectsManager';
 import { EntityManager } from './systems/EntityManager';
 import { GameLoop } from './systems/GameLoop';
 import { InputManager } from './systems/InputManager';
+import { ThreatSystem } from './systems/ThreatSystem';
 import { WaveManager } from './systems/WaveManager';
-import type { GameScreen, GameSnapshot } from './types';
+import type { GameOverReason, GameScreen, GameSnapshot } from './types';
 
 export interface GameCallbacks {
   onScreenChange?: (screen: GameScreen) => void;
@@ -27,6 +29,8 @@ export class Game {
   private economy: EconomyManager;
   private effects: EffectsManager;
   private waves: WaveManager;
+  private threats: ThreatSystem;
+  private base: BaseDefenseSystem;
   private turret: Turret;
   private callbacks: GameCallbacks;
 
@@ -35,10 +39,9 @@ export class Game {
   private shakeIntensity = 0;
   private shakeX = 0;
   private shakeY = 0;
-
   private level = 1;
-  private baseHealth = BALANCING.base.maxHealth;
-  private breach = 0;
+  private gameOverReason: GameOverReason | null = null;
+  private finalScore = 0;
 
   constructor(canvas: HTMLCanvasElement, callbacks: GameCallbacks = {}) {
     const ctx = canvas.getContext('2d');
@@ -57,6 +60,8 @@ export class Game {
     this.collision = new CollisionSystem();
     this.economy = new EconomyManager();
     this.effects = new EffectsManager();
+    this.base = new BaseDefenseSystem();
+    this.threats = new ThreatSystem();
     this.waves = new WaveManager({
       onSpawn: (typeId, side, y) => {
         this.entities.spawnEnemy(typeId, side, width, y);
@@ -95,12 +100,17 @@ export class Game {
 
     if (screen === 'playing') {
       this.loop.setPaused(false);
-    } else if (screen === 'paused') {
+    } else if (screen === 'paused' || screen === 'gameOver') {
       this.loop.setPaused(true);
     }
   }
 
   beginPrototypeSession(): void {
+    this.resetSession();
+    this.setScreen('playing');
+  }
+
+  restartSession(): void {
     this.resetSession();
     this.setScreen('playing');
   }
@@ -116,14 +126,23 @@ export class Game {
   resetSession(): void {
     this.elapsedTime = 0;
     this.level = 1;
-    this.baseHealth = BALANCING.base.maxHealth;
-    this.breach = 0;
+    this.gameOverReason = null;
+    this.finalScore = 0;
     this.shakeIntensity = 0;
+    this.base.reset();
     this.economy.reset();
     this.effects.clear();
     this.entities.clear();
     this.turret = new Turret(BALANCING.canvas.width, BALANCING.canvas.height);
     this.waves.start();
+  }
+
+  private triggerGameOver(): void {
+    this.finalScore = this.economy.score;
+    this.gameOverReason = this.base.getDefeatReason();
+    this.setScreen('gameOver');
+    this.addScreenShake(10);
+    // Audio hook: playGameOver()
   }
 
   private update(dt: number): void {
@@ -143,6 +162,7 @@ export class Game {
       return;
     }
 
+    const { width, height } = BALANCING.canvas;
     const input = this.input.getState();
     this.turret.update(dt, input, true);
 
@@ -156,26 +176,42 @@ export class Game {
       this.addScreenShake(1.5);
     }
 
-    this.waves.update(dt, this.entities.getAliveEnemyCount());
+    this.entities.update(dt, width, height);
 
-    this.collision.process(
-      this.entities.projectiles,
+    this.threats.updateFlyingDrops(
       this.entities.enemies,
+      this.entities,
+      width,
+      height,
+      dt,
       this.effects,
-      this.economy,
-      {
-        onScreenShake: (amount) => this.addScreenShake(amount),
-        onHit: () => {
-          // Audio hook: playHit()
-        },
-      },
     );
+
+    this.waves.update(dt, this.entities.getAliveFlyingCount());
+
+    this.collision.process(this.entities, this.effects, this.economy, {
+      onScreenShake: (amount) => this.addScreenShake(amount),
+    });
     this.entities.pruneProjectiles();
 
-    this.entities.update(dt, BALANCING.canvas.width, BALANCING.canvas.height);
+    this.threats.updateThreats(
+      this.entities,
+      this.base,
+      this.effects,
+      width,
+      height,
+      dt,
+      (amount) => this.addScreenShake(amount),
+    );
+
     this.effects.update(dt);
     this.economy.update(dt);
     this.decayShake(dt);
+
+    if (this.base.isDefeated()) {
+      this.triggerGameOver();
+    }
+
     this.emitSnapshot();
   }
 
@@ -200,10 +236,14 @@ export class Game {
       turret: this.turret.state,
       projectiles: this.entities.projectiles,
       enemies: this.entities.enemies,
+      bombs: this.entities.bombs,
+      dropPods: this.entities.dropPods,
+      groundEnemies: this.entities.groundEnemies,
       muzzleFlashes: this.entities.muzzleFlashes,
       effects: this.effects,
       shakeX: this.shakeX,
       shakeY: this.shakeY,
+      breachDanger: this.base.isBreachDanger(),
     });
   }
 
@@ -213,10 +253,10 @@ export class Game {
       credits: 0,
       level: this.level,
       wave: this.waves.getWaveNumber(),
-      baseHealth: this.baseHealth,
-      maxBaseHealth: BALANCING.base.maxHealth,
+      baseHealth: this.base.health,
+      maxBaseHealth: this.base.maxHealth,
       breach: this.breach,
-      maxBreach: BALANCING.base.maxBreach,
+      maxBreach: this.base.maxBreach,
       combo: this.economy.getCombo(),
       weaponName: MACHINE_GUN.name,
       heat: this.turret.state.heat,
@@ -226,7 +266,16 @@ export class Game {
       isBossFight: false,
       bossHealth: 0,
       bossMaxHealth: 0,
-      enemiesRemaining: this.entities.getAliveEnemyCount(),
+      enemiesRemaining: this.entities.getAliveFlyingCount(),
+      groundThreats: this.entities.getGroundThreatCount(),
+      breachDanger: this.base.isBreachDanger(),
+      bombWarning: this.threats.bombWarningActive,
+      gameOverReason: this.gameOverReason,
+      finalScore: this.finalScore,
     });
+  }
+
+  private get breach(): number {
+    return this.base.breach;
   }
 }

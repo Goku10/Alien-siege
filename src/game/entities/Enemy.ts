@@ -25,6 +25,8 @@ function createEnemy(): EnemyState {
     baseY: 0,
     scoreValue: 0,
     flashTimer: 0,
+    dropTimer: 0,
+    dropsReleased: 0,
   };
 }
 
@@ -68,7 +70,30 @@ export function spawnEnemy(
   enemy.patternAmplitude = def.patternAmplitude;
   enemy.patternFrequency = def.patternFrequency;
   enemy.scoreValue = def.score;
+  enemy.dropTimer = def.dropInterval * 0.5;
+  enemy.dropsReleased = 0;
   return enemy;
+}
+
+export function canEnemyDrop(enemy: EnemyState, boundsW: number): boolean {
+  const def = ENEMY_DEFINITIONS[enemy.typeId];
+  if (def.dropKind === 'none' || enemy.dropsReleased >= def.maxDrops) return false;
+  const minX = BALANCING.threats.dropMinX;
+  const maxX = boundsW - BALANCING.threats.dropMaxOffsetFromEdge;
+  return enemy.x >= minX && enemy.x <= maxX;
+}
+
+export function tickEnemyDrop(enemy: EnemyState, dt: number): boolean {
+  const def = ENEMY_DEFINITIONS[enemy.typeId];
+  if (def.dropKind === 'none' || enemy.dropsReleased >= def.maxDrops) return false;
+
+  enemy.dropTimer += dt;
+  if (enemy.dropTimer >= def.dropInterval) {
+    enemy.dropTimer = 0;
+    enemy.dropsReleased += 1;
+    return true;
+  }
+  return false;
 }
 
 export function updateEnemy(enemy: EnemyState, dt: number, boundsW: number): boolean {

@@ -1,17 +1,40 @@
+import { bombPool, spawnBomb, updateBomb } from '../entities/Bomb';
+import { dropPodPool, spawnDropPod, updateDropPod } from '../entities/DropPod';
+import { groundEnemyPool, spawnGroundEnemy, updateGroundEnemy } from '../entities/GroundEnemy';
 import { spawnEnemy, updateEnemy } from '../entities/Enemy';
 import { spawnProjectile, updateProjectile } from '../entities/Projectile';
-import type { EnemyState, EnemyTypeId, MuzzleFlash, ProjectileState, SpawnSide } from '../types';
+import { getBaseLayout } from '../utils/baseLayout';
+import type {
+  BombState,
+  DropPodState,
+  EnemyState,
+  EnemyTypeId,
+  GroundEnemyState,
+  GroundEnemyTypeId,
+  MuzzleFlash,
+  ProjectileState,
+  SpawnSide,
+} from '../types';
 
 export class EntityManager {
   projectiles: ProjectileState[] = [];
   enemies: EnemyState[] = [];
+  bombs: BombState[] = [];
+  dropPods: DropPodState[] = [];
+  groundEnemies: GroundEnemyState[] = [];
   muzzleFlashes: MuzzleFlash[] = [];
 
   clear(): void {
     for (const p of this.projectiles) p.active = false;
     for (const e of this.enemies) e.active = false;
+    for (const b of this.bombs) b.active = false;
+    for (const d of this.dropPods) d.active = false;
+    for (const g of this.groundEnemies) g.active = false;
     this.projectiles.length = 0;
     this.enemies.length = 0;
+    this.bombs.length = 0;
+    this.dropPods.length = 0;
+    this.groundEnemies.length = 0;
     this.muzzleFlashes.length = 0;
   }
 
@@ -27,12 +50,61 @@ export class EntityManager {
     return enemy;
   }
 
+  spawnBomb(x: number, y: number): BombState {
+    const bomb = spawnBomb(x, y);
+    this.bombs.push(bomb);
+    return bomb;
+  }
+
+  spawnDropPod(x: number, y: number, payload: GroundEnemyTypeId): DropPodState {
+    const pod = spawnDropPod(x, y, payload);
+    this.dropPods.push(pod);
+    return pod;
+  }
+
+  spawnGroundEnemy(
+    typeId: GroundEnemyTypeId,
+    x: number,
+    y: number,
+    boundsW: number,
+    boundsH: number,
+  ): GroundEnemyState {
+    const layout = getBaseLayout(boundsW, boundsH);
+    const g = spawnGroundEnemy(typeId, x, y, layout);
+    this.groundEnemies.push(g);
+    return g;
+  }
+
   addMuzzleFlash(flash: MuzzleFlash): void {
     this.muzzleFlashes.push(flash);
   }
 
-  getAliveEnemyCount(): number {
+  getAliveFlyingCount(): number {
     return this.enemies.filter((e) => e.active && e.health > 0).length;
+  }
+
+  getGroundThreatCount(): number {
+    return (
+      this.groundEnemies.filter((g) => g.active && g.health > 0).length +
+      this.bombs.filter((b) => b.active).length +
+      this.dropPods.filter((p) => p.active).length
+    );
+  }
+
+  updateBombEntity(b: BombState, dt: number, groundY: number): 'falling' | 'impact' | 'dead' {
+    return updateBomb(b, dt, groundY);
+  }
+
+  updateDropPodEntity(p: DropPodState, dt: number, groundY: number): 'falling' | 'landed' | 'dead' {
+    return updateDropPod(p, dt, groundY);
+  }
+
+  updateGroundEntity(
+    g: GroundEnemyState,
+    dt: number,
+    layout: ReturnType<typeof getBaseLayout>,
+  ) {
+    return updateGroundEnemy(g, dt, layout);
   }
 
   update(dt: number, boundsW: number, boundsH: number): void {
@@ -54,8 +126,22 @@ export class EntityManager {
     });
   }
 
-  /** Remove inactive projectiles after collision pass */
   pruneProjectiles(): void {
     this.projectiles = this.projectiles.filter((p) => p.active);
+  }
+
+  releaseBomb(b: BombState): void {
+    b.active = false;
+    bombPool.release(b);
+  }
+
+  releaseDropPod(p: DropPodState): void {
+    p.active = false;
+    dropPodPool.release(p);
+  }
+
+  releaseGroundEnemy(g: GroundEnemyState): void {
+    g.active = false;
+    groundEnemyPool.release(g);
   }
 }

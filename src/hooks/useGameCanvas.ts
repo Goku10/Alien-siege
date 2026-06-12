@@ -21,6 +21,11 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   bossHealth: 0,
   bossMaxHealth: 0,
   enemiesRemaining: 0,
+  groundThreats: 0,
+  breachDanger: false,
+  bombWarning: false,
+  gameOverReason: null,
+  finalScore: 0,
 };
 
 export function useGameCanvas() {
@@ -63,6 +68,10 @@ export function useGameCanvas() {
     gameRef.current?.setScreen('playing');
   }, []);
 
+  const restartGame = useCallback(() => {
+    gameRef.current?.restartSession();
+  }, []);
+
   return {
     canvasRef,
     screen,
@@ -71,5 +80,6 @@ export function useGameCanvas() {
     goToTitle,
     togglePause,
     resumeGame,
+    restartGame,
   };
 }
