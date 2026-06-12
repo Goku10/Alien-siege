@@ -1,5 +1,6 @@
 import { BALANCING } from '../data/balancing';
 import { getPhaseConfig, MOTHERSHIP_BOSS } from '../data/bossConfig';
+import { NEUTRAL_FLYER_MODIFIERS } from '../data/spawnModifiers';
 import { createBoss, damageBoss } from '../entities/Boss';
 import { getBaseLayout } from '../utils/baseLayout';
 import type { BossState } from '../types';
@@ -92,7 +93,6 @@ export class BossManager {
       effects.spawnExplosion(boss.x + 40, boss.y, 50, '#00e5c0');
       this.callbacks.onScreenShake?.(MOTHERSHIP_BOSS.shakeOnDefeat);
       const bonus = Math.floor(MOTHERSHIP_BOSS.defeatScore * (1 + boss.levelId * 0.15));
-      effects.spawnScorePopup(boss.x, boss.y, `BOSS DEFEATED +${bonus}`, 'announce');
       this.callbacks.onDefeated?.(bonus);
     }
   }
@@ -160,11 +160,8 @@ export class BossManager {
       const side = i % 2 === 0 ? 'left' : 'right';
       const y = boss.y + 30 + i * 12;
       const enemy = entities.spawnEnemy('scout_saucer', side, w, y, {
+        ...NEUTRAL_FLYER_MODIFIERS,
         speedMultiplier: 1.1 + boss.phase * 0.08,
-        healthMultiplier: 1,
-        scoreMultiplier: 1,
-        dropIntervalScale: 1,
-        maxDropsBonus: 0,
       });
       enemy.x = boss.x + (i - count / 2) * 30;
     }

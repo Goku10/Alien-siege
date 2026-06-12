@@ -15,9 +15,23 @@ export interface GameBounds {
   height: number;
 }
 
+/** Spawn-time stat multipliers for flying enemies */
+export interface FlyerSpawnModifiers {
+  speedMultiplier: number;
+  healthMultiplier: number;
+  scoreMultiplier: number;
+  dropIntervalScale: number;
+  maxDropsBonus: number;
+}
+
+/** Spawn-time stat multipliers for ground units from pods */
+export interface GroundSpawnModifiers {
+  speedMultiplier: number;
+  healthMultiplier: number;
+}
+
 export type GameScreen =
   | 'title'
-  | 'instructions'
   | 'playing'
   | 'paused'
   | 'levelComplete'
@@ -340,6 +354,8 @@ export interface GameSnapshot {
   wave: number;
   baseHealth: number;
   maxBaseHealth: number;
+  baseShield: number;
+  maxBaseShield: number;
   breach: number;
   maxBreach: number;
   combo: number;

@@ -44,6 +44,10 @@ export function GameOverScreen({ snapshot, onRestart, onTitle }: GameOverScreenP
           </div>
         </div>
 
+        <p className="panel__hint panel__hint--dim">
+          Restarting begins a new run — shop upgrades and credits are reset.
+        </p>
+
         <div className="panel__actions">
           <button type="button" className="btn btn--primary" onClick={onRestart}>
             Try Again

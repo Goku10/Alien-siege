@@ -5,19 +5,20 @@ import {
   groundEnemyPool,
   spawnGroundEnemy,
   updateGroundEnemy,
-  type GroundSpawnModifiers,
 } from '../entities/GroundEnemy';
-import { applyEnemyModifiers, spawnEnemy, updateEnemy, type EnemySpawnModifiers } from '../entities/Enemy';
+import { applyEnemyModifiers, enemyPool, spawnEnemy, updateEnemy } from '../entities/Enemy';
 import type { WeaponStats } from '../data/weapons';
-import { spawnWeaponProjectiles, updateProjectile } from '../entities/Projectile';
+import { projectilePool, spawnWeaponProjectiles, updateProjectile } from '../entities/Projectile';
 import { getBaseLayout } from '../utils/baseLayout';
 import type {
   BombState,
   DropPodState,
   EnemyState,
   EnemyTypeId,
+  FlyerSpawnModifiers,
   GroundEnemyState,
   GroundEnemyTypeId,
+  GroundSpawnModifiers,
   MuzzleFlash,
   ProjectileState,
   SpawnSide,
@@ -35,27 +36,24 @@ export class EntityManager {
   muzzleFlashes: MuzzleFlash[] = [];
 
   clear(): void {
-    for (const p of this.projectiles) p.active = false;
-    for (const e of this.enemies) e.active = false;
-    for (const b of this.bombs) b.active = false;
-    for (const d of this.dropPods) d.active = false;
-    for (const g of this.groundEnemies) g.active = false;
-    this.projectiles.length = 0;
-    this.enemies.length = 0;
-    this.bombs.length = 0;
-    this.dropPods.length = 0;
-    this.groundEnemies.length = 0;
+    this.releaseAllProjectiles();
+    this.releaseAllEnemies();
+    this.releaseAllBombs();
+    this.releaseAllDropPods();
+    this.releaseAllGroundEnemies();
     this.muzzleFlashes.length = 0;
+    this.pendingSplashBursts = [];
   }
 
-  /** Remove all active threats between levels (keeps base state). */
+  /** Remove combat entities between levels; releases pooled objects. */
   clearThreats(): void {
-    this.enemies.length = 0;
-    this.bombs.length = 0;
-    this.dropPods.length = 0;
-    this.groundEnemies.length = 0;
-    this.projectiles.length = 0;
+    this.releaseAllProjectiles();
+    this.releaseAllEnemies();
+    this.releaseAllBombs();
+    this.releaseAllDropPods();
+    this.releaseAllGroundEnemies();
     this.muzzleFlashes.length = 0;
+    this.pendingSplashBursts = [];
   }
 
   setWeaponStats(stats: WeaponStats): void {
@@ -79,7 +77,7 @@ export class EntityManager {
     side: SpawnSide,
     boundsW: number,
     y?: number,
-    modifiers?: EnemySpawnModifiers,
+    modifiers?: FlyerSpawnModifiers,
   ): EnemyState {
     const enemy = spawnEnemy(typeId, side, boundsW, y);
     if (modifiers) applyEnemyModifiers(enemy, modifiers);
@@ -198,5 +196,45 @@ export class EntityManager {
   releaseGroundEnemy(g: GroundEnemyState): void {
     g.active = false;
     groundEnemyPool.release(g);
+  }
+
+  private releaseAllProjectiles(): void {
+    for (const p of this.projectiles) {
+      p.active = false;
+      projectilePool.release(p);
+    }
+    this.projectiles.length = 0;
+  }
+
+  private releaseAllEnemies(): void {
+    for (const e of this.enemies) {
+      e.active = false;
+      enemyPool.release(e);
+    }
+    this.enemies.length = 0;
+  }
+
+  private releaseAllBombs(): void {
+    for (const b of this.bombs) {
+      b.active = false;
+      bombPool.release(b);
+    }
+    this.bombs.length = 0;
+  }
+
+  private releaseAllDropPods(): void {
+    for (const p of this.dropPods) {
+      p.active = false;
+      dropPodPool.release(p);
+    }
+    this.dropPods.length = 0;
+  }
+
+  private releaseAllGroundEnemies(): void {
+    for (const g of this.groundEnemies) {
+      g.active = false;
+      groundEnemyPool.release(g);
+    }
+    this.groundEnemies.length = 0;
   }
 }

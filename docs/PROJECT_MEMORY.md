@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 11 complete  
+**Current phase:** Phase 12 complete (MVP)  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -49,7 +49,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 9 | Tiered upgrade system (weapon/defense/special) | ✅ Done |
 | 10 | Enemy variety, wave composition, level scaling | ✅ Done |
 | 11 | Polish — HUD, VFX feedback, screen UX | ✅ Done |
-| 12 | Audio, save/load, or expansion | ⏳ Next |
+| 12 | MVP stabilization — refactor, bugs, docs | ✅ Done |
 
 ---
 
@@ -243,7 +243,21 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 11)
+### Phase 12 — MVP stabilization
+**Commit:** *(pending)* — *Phase 12: Refactor, bug fixes, and MVP documentation.*
+
+**Built:**
+- Unified `FlyerSpawnModifiers` / `spawnModifiers.ts`; `killResolver.ts` deduplicates kill feedback
+- `BaseDefenseSystem` shield pool (shop shield upgrades work correctly)
+- Entity pool releases in `clear()` / `clearThreats()`; level transition cleanup
+- `startNewRun()` session API; pause during intro/boss warning; `resumeGame` uses `togglePause`
+- Splash kills award rewards for bombs/pods; boss defeat popup deduplicated
+- Final-level shop before campaign complete; game-over restart clarity
+- Expanded `balancing.ts` (combat, ui, fire shake); README architecture guide
+
+---
+
+## Current state (after Phase 12 — MVP)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
@@ -334,18 +348,19 @@ input → turret → firing → entities.update → flying drops
 | `dc9a092` | 2026-06-12 | Phase 10 — enemy variety, wave composition, scaling |
 | `a0b277c` | 2026-06-12 | Project memory update for Phase 10 |
 | `5040149` | 2026-06-12 | Phase 11 — presentation polish |
+| `6ac30b9` | 2026-06-12 | Project memory update for Phase 11 |
+| *(pending)* | 2026-06-12 | Phase 12 — MVP stabilization |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
 ---
 
-## Phase 12 preview (next work)
+## Post-MVP ideas
 
 - [ ] Audio hooks wired to a sound library
-- [ ] Save/load or campaign expansion
+- [ ] Save/load (localStorage)
+- [ ] Additional levels or endless mode
 - [ ] Balance pass on wave compositions and shop economy
-
-**Config:** `balancing.ts` effects section for shake/VFX tuning; `game.css` for HUD styling.
 
 ---
 

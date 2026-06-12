@@ -1,21 +1,14 @@
 import { BALANCING } from '../data/balancing';
 import type { LevelScaling } from '../data/levelScaling';
 import type { LevelConfig, WaveConfig } from '../data/levels';
-import type { EnemyTypeId, SpawnSide } from '../types';
-
-export interface SpawnModifiers {
-  speedMultiplier: number;
-  healthMultiplier: number;
-  scoreMultiplier: number;
-  dropIntervalScale: number;
-  maxDropsBonus: number;
-}
+import { flyerModifiersFromScaling } from '../data/spawnModifiers';
+import type { EnemyTypeId, FlyerSpawnModifiers, SpawnSide } from '../types';
 
 export type SpawnCallback = (
   typeId: EnemyTypeId,
   side: SpawnSide,
   y: number | undefined,
-  modifiers: SpawnModifiers,
+  modifiers: FlyerSpawnModifiers,
 ) => void;
 
 export interface WaveCallbacks {
@@ -103,13 +96,7 @@ export class WaveManager {
       if (scaledDelay > this.waveTimer) break;
 
       const side = this.resolveSide(spawn.side);
-      this.callbacks.onSpawn?.(spawn.enemyType, side, spawn.y, {
-        speedMultiplier: this.scaling.speedMultiplier,
-        healthMultiplier: this.scaling.healthMultiplier,
-        scoreMultiplier: this.scaling.scoreMultiplier,
-        dropIntervalScale: this.scaling.dropIntervalScale,
-        maxDropsBonus: this.scaling.maxDropsBonus,
-      });
+      this.callbacks.onSpawn?.(spawn.enemyType, side, spawn.y, flyerModifiersFromScaling(this.scaling));
       this.spawnIndex += 1;
     }
 

@@ -33,11 +33,20 @@ export function buildLoadoutStatPreview(
     );
   }
 
-  const beforeHealth =
-    before.defense.maxHealthBonus + before.defense.shieldCapacityBonus;
-  const afterHealth =
-    after.defense.maxHealthBonus + after.defense.shieldCapacityBonus;
-  pushIfChanged(deltas, 'Base HP bonus', beforeHealth, afterHealth, (n) => `+${Math.round(n)}`);
+  pushIfChanged(
+    deltas,
+    'Max HP bonus',
+    before.defense.maxHealthBonus,
+    after.defense.maxHealthBonus,
+    (n) => `+${Math.round(n)}`,
+  );
+  pushIfChanged(
+    deltas,
+    'Shield capacity',
+    before.defense.shieldCapacityBonus,
+    after.defense.shieldCapacityBonus,
+    (n) => `+${Math.round(n)}`,
+  );
 
   pushIfChanged(
     deltas,

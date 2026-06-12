@@ -1,6 +1,6 @@
 import { BALANCING } from '../data/balancing';
 import { ENEMY_DEFINITIONS } from '../data/enemies';
-import type { EnemyState, EnemyTypeId, SpawnSide } from '../types';
+import type { EnemyState, EnemyTypeId, FlyerSpawnModifiers, SpawnSide } from '../types';
 import { ObjectPool } from '../../utils/objectPool';
 
 let nextEnemyId = 1;
@@ -156,15 +156,7 @@ export function damageEnemy(enemy: EnemyState, amount: number): void {
   }
 }
 
-export interface EnemySpawnModifiers {
-  speedMultiplier: number;
-  healthMultiplier: number;
-  scoreMultiplier: number;
-  dropIntervalScale: number;
-  maxDropsBonus: number;
-}
-
-export function applyEnemyModifiers(enemy: EnemyState, mods: EnemySpawnModifiers): void {
+export function applyEnemyModifiers(enemy: EnemyState, mods: FlyerSpawnModifiers): void {
   enemy.vx *= mods.speedMultiplier;
   enemy.health = Math.ceil(enemy.health * mods.healthMultiplier);
   enemy.maxHealth = enemy.health;
@@ -176,7 +168,10 @@ export function applyEnemyModifiers(enemy: EnemyState, mods: EnemySpawnModifiers
   }
 
   if (enemy.dropInterval > 0) {
-    enemy.dropInterval = Math.max(0.8, enemy.dropInterval * mods.dropIntervalScale);
+    enemy.dropInterval = Math.max(
+      BALANCING.combat.minDropInterval,
+      enemy.dropInterval * mods.dropIntervalScale,
+    );
   }
   if (enemy.maxDrops > 0) {
     enemy.maxDrops += mods.maxDropsBonus;

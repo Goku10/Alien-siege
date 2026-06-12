@@ -9,6 +9,8 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   wave: 0,
   baseHealth: 100,
   maxBaseHealth: 100,
+  baseShield: 0,
+  maxBaseShield: 0,
   breach: 0,
   maxBreach: 100,
   combo: 1,
@@ -74,11 +76,11 @@ export function useGameCanvas() {
   }, []);
 
   const startGame = useCallback(() => {
-    gameRef.current?.beginPrototypeSession();
+    gameRef.current?.startNewRun();
   }, []);
 
   const goToTitle = useCallback(() => {
-    gameRef.current?.resetSession();
+    gameRef.current?.resetSession({ skipIntro: true });
     gameRef.current?.setScreen('title');
   }, []);
 
@@ -87,11 +89,11 @@ export function useGameCanvas() {
   }, []);
 
   const resumeGame = useCallback(() => {
-    gameRef.current?.setScreen('playing');
+    gameRef.current?.togglePause();
   }, []);
 
   const restartGame = useCallback(() => {
-    gameRef.current?.restartSession();
+    gameRef.current?.startNewRun();
   }, []);
 
   const openShop = useCallback(() => {

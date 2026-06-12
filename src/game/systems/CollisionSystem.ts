@@ -13,6 +13,11 @@ import { EconomyManager } from './EconomyManager';
 import { EffectsManager } from './EffectsManager';
 import type { BossManager } from './BossManager';
 import type { EntityManager } from './EntityManager';
+import {
+  applyKillFeedback,
+  isHeavyTarget,
+  splashDamageAt,
+} from './killResolver';
 
 export interface CollisionCallbacks {
   onScreenShake?: (amount: number) => void;
@@ -29,17 +34,8 @@ function circleHit(
   return dx * dx + dy * dy <= r * r;
 }
 
-function splashDamageAt(distance: number, radius: number, baseDamage: number): number {
-  if (radius <= 0) return 0;
-  const t = Math.min(1, distance / radius);
-  return Math.max(1, Math.floor(baseDamage * (1 - t * 0.55)));
-}
-
-function maybeHeavyHitShake(
-  maxHealth: number,
-  callbacks: CollisionCallbacks,
-): void {
-  if (maxHealth >= BALANCING.effects.heavyHitHealthThreshold) {
+function maybeHeavyHitShake(maxHealth: number, callbacks: CollisionCallbacks): void {
+  if (isHeavyTarget(maxHealth)) {
     callbacks.onScreenShake?.(BALANCING.effects.heavyHitShake);
   }
 }
@@ -68,7 +64,11 @@ export class CollisionSystem {
   ): void {
     for (const burst of bursts) {
       effects.spawnExplosion(burst.x, burst.y, burst.radius, '#ff6b35');
-      callbacks.onScreenShake?.(burst.kind === 'missile' ? 6 : 3);
+      const shake =
+        burst.kind === 'missile'
+          ? BALANCING.effects.missileSplashShake
+          : BALANCING.effects.flakSplashShake;
+      callbacks.onScreenShake?.(shake);
       this.applySplash(
         burst.x,
         burst.y,
@@ -151,7 +151,12 @@ export class CollisionSystem {
     if (!result.hit) return false;
     callbacks.onHit?.();
     if (proj.splashRadius > 0) {
-      effects.spawnExplosion(proj.x, proj.y, proj.splashRadius * 0.65, proj.glowColor);
+      effects.spawnExplosion(
+        proj.x,
+        proj.y,
+        proj.splashRadius * BALANCING.combat.splashExplosionScale,
+        proj.glowColor,
+      );
       this.applySplash(
         proj.x,
         proj.y,
@@ -180,29 +185,23 @@ export class CollisionSystem {
 
       damageEnemy(enemy, proj.damage);
       const def = ENEMY_DEFINITIONS[enemy.typeId];
-      const heavy = enemy.maxHealth >= BALANCING.effects.heavyHitHealthThreshold;
+      const heavy = isHeavyTarget(enemy.maxHealth);
       effects.spawnHitSparks(proj.x, proj.y, enemy.typeId, heavy);
       callbacks.onHit?.();
       if (enemy.health > 0) maybeHeavyHitShake(enemy.maxHealth, callbacks);
       this.maybeSplash(proj, enemy.x, enemy.y, enemy.id, entities, economy, effects, callbacks);
 
       if (enemy.health <= 0) {
-        const reward = economy.registerKill(
-          enemy.scoreValue,
-          getKillCredits(enemy.typeId),
-        );
-        effects.spawnKillFeedback(
-          enemy.x,
-          enemy.y,
-          reward.score,
-          reward.credits,
-          reward.combo,
-          reward.comboIncreased,
-          def.accentColor,
-          enemy.radius,
-          heavy,
-        );
-        callbacks.onScreenShake?.(def.shakeOnDeath);
+        const reward = economy.registerKill(enemy.scoreValue, getKillCredits(enemy.typeId));
+        applyKillFeedback(effects, callbacks, {
+          x: enemy.x,
+          y: enemy.y,
+          reward,
+          accentColor: def.accentColor,
+          radius: enemy.radius,
+          large: heavy,
+          shakeOnDeath: def.shakeOnDeath,
+        });
       }
       return true;
     }
@@ -222,29 +221,23 @@ export class CollisionSystem {
 
       damageGroundEnemy(g, proj.damage);
       const gDef = GROUND_ENEMY_DEFINITIONS[g.typeId];
-      const gHeavy = g.maxHealth >= BALANCING.effects.heavyHitHealthThreshold;
+      const gHeavy = isHeavyTarget(g.maxHealth);
       effects.spawnGroundHitSparks(proj.x, proj.y, g.typeId);
       callbacks.onHit?.();
       if (g.health > 0) maybeHeavyHitShake(g.maxHealth, callbacks);
       this.maybeSplash(proj, g.x, g.y, g.id, entities, economy, effects, callbacks);
 
       if (g.health <= 0) {
-        const reward = economy.registerKill(
-          g.scoreValue,
-          getKillCredits(g.typeId),
-        );
-        effects.spawnKillFeedback(
-          g.x,
-          g.y,
-          reward.score,
-          reward.credits,
-          reward.combo,
-          reward.comboIncreased,
-          gDef.accentColor,
-          g.radius,
-          gHeavy,
-        );
-        callbacks.onScreenShake?.(gDef.shakeOnDeath);
+        const reward = economy.registerKill(g.scoreValue, getKillCredits(g.typeId));
+        applyKillFeedback(effects, callbacks, {
+          x: g.x,
+          y: g.y,
+          reward,
+          accentColor: gDef.accentColor,
+          radius: g.radius,
+          large: gHeavy,
+          shakeOnDeath: gDef.shakeOnDeath,
+        });
         g.active = false;
       }
       return true;
@@ -269,23 +262,16 @@ export class CollisionSystem {
       this.maybeSplash(proj, b.x, b.y, b.id, entities, economy, effects, callbacks);
 
       if (b.health <= 0) {
-        const reward = economy.registerKill(
-          b.scoreValue,
-          getKillCredits('bomb'),
-        );
-        effects.spawnKillFeedback(
-          b.x,
-          b.y,
-          reward.score,
-          reward.credits,
-          reward.combo,
-          reward.comboIncreased,
-          '#ffaa00',
-          b.radius * 1.5,
-          false,
-        );
+        const reward = economy.registerKill(b.scoreValue, getKillCredits('bomb'));
+        applyKillFeedback(effects, callbacks, {
+          x: b.x,
+          y: b.y,
+          reward,
+          accentColor: '#ffaa00',
+          radius: b.radius * 1.5,
+          shakeOnDeath: BALANCING.combat.bombKillShake,
+        });
         entities.releaseBomb(b);
-        callbacks.onScreenShake?.(3);
       }
       return true;
     }
@@ -309,23 +295,16 @@ export class CollisionSystem {
       this.maybeSplash(proj, p.x, p.y, p.id, entities, economy, effects, callbacks);
 
       if (p.health <= 0) {
-        const reward = economy.registerKill(
-          p.scoreValue,
-          getKillCredits('pod'),
-        );
-        effects.spawnKillFeedback(
-          p.x,
-          p.y,
-          reward.score,
-          reward.credits,
-          reward.combo,
-          reward.comboIncreased,
-          '#52b788',
-          p.radius,
-          false,
-        );
+        const reward = economy.registerKill(p.scoreValue, getKillCredits('pod'));
+        applyKillFeedback(effects, callbacks, {
+          x: p.x,
+          y: p.y,
+          reward,
+          accentColor: '#52b788',
+          radius: p.radius,
+          shakeOnDeath: BALANCING.combat.podKillShake,
+        });
         entities.releaseDropPod(p);
-        callbacks.onScreenShake?.(2);
       }
       return true;
     }
@@ -343,7 +322,12 @@ export class CollisionSystem {
     callbacks: CollisionCallbacks,
   ): void {
     if (proj.splashRadius <= 0) return;
-    effects.spawnExplosion(hitX, hitY, proj.splashRadius * 0.65, proj.glowColor);
+    effects.spawnExplosion(
+      hitX,
+      hitY,
+      proj.splashRadius * BALANCING.combat.splashExplosionScale,
+      proj.glowColor,
+    );
     this.applySplash(
       hitX,
       hitY,
@@ -391,24 +375,20 @@ export class CollisionSystem {
       if (!enemy.active || enemy.health <= 0 || enemy.id === excludeId) continue;
       const dist = Math.hypot(x - enemy.x, y - enemy.y);
       if (dist > radius + enemy.radius) continue;
-      const dmg = splashDamageAt(dist, radius, baseDamage);
-      damageEnemy(enemy, dmg);
+      damageEnemy(enemy, splashDamageAt(dist, radius, baseDamage));
       callbacks.onHit?.();
       if (enemy.health <= 0) {
         const def = ENEMY_DEFINITIONS[enemy.typeId];
         const reward = economy.registerKill(enemy.scoreValue, getKillCredits(enemy.typeId));
-        effects.spawnKillFeedback(
-          enemy.x,
-          enemy.y,
-          reward.score,
-          reward.credits,
-          reward.combo,
-          reward.comboIncreased,
-          def.accentColor,
-          enemy.radius,
-          enemy.maxHealth >= BALANCING.effects.heavyHitHealthThreshold,
-        );
-        callbacks.onScreenShake?.(def.shakeOnDeath * 0.6);
+        applyKillFeedback(effects, callbacks, {
+          x: enemy.x,
+          y: enemy.y,
+          reward,
+          accentColor: def.accentColor,
+          radius: enemy.radius,
+          large: isHeavyTarget(enemy.maxHealth),
+          shakeOnDeath: def.shakeOnDeath * BALANCING.combat.splashDeathShakeScale,
+        });
       }
     }
 
@@ -421,17 +401,14 @@ export class CollisionSystem {
       if (g.health <= 0) {
         const gDef = GROUND_ENEMY_DEFINITIONS[g.typeId];
         const reward = economy.registerKill(g.scoreValue, getKillCredits(g.typeId));
-        effects.spawnKillFeedback(
-          g.x,
-          g.y,
-          reward.score,
-          reward.credits,
-          reward.combo,
-          reward.comboIncreased,
-          gDef.accentColor,
-          g.radius,
-          false,
-        );
+        applyKillFeedback(effects, callbacks, {
+          x: g.x,
+          y: g.y,
+          reward,
+          accentColor: gDef.accentColor,
+          radius: g.radius,
+          shakeOnDeath: gDef.shakeOnDeath * BALANCING.combat.splashDeathShakeScale,
+        });
         g.active = false;
       }
     }
@@ -442,6 +419,18 @@ export class CollisionSystem {
       if (dist > radius + b.radius) continue;
       damageBomb(b, splashDamageAt(dist, radius, baseDamage));
       callbacks.onHit?.();
+      if (b.health <= 0) {
+        const reward = economy.registerKill(b.scoreValue, getKillCredits('bomb'));
+        applyKillFeedback(effects, callbacks, {
+          x: b.x,
+          y: b.y,
+          reward,
+          accentColor: '#ffaa00',
+          radius: b.radius * 1.5,
+          shakeOnDeath: BALANCING.combat.bombKillShake,
+        });
+        entities.releaseBomb(b);
+      }
     }
 
     for (const p of entities.dropPods) {
@@ -450,6 +439,18 @@ export class CollisionSystem {
       if (dist > radius + p.radius) continue;
       damageDropPod(p, splashDamageAt(dist, radius, baseDamage));
       callbacks.onHit?.();
+      if (p.health <= 0) {
+        const reward = economy.registerKill(p.scoreValue, getKillCredits('pod'));
+        applyKillFeedback(effects, callbacks, {
+          x: p.x,
+          y: p.y,
+          reward,
+          accentColor: '#52b788',
+          radius: p.radius,
+          shakeOnDeath: BALANCING.combat.podKillShake,
+        });
+        entities.releaseDropPod(p);
+      }
     }
   }
 }

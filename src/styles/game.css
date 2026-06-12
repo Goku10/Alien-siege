@@ -948,6 +948,15 @@
   background: linear-gradient(90deg, #00c9a7, #00e5c0);
 }
 
+.hud__bar--shield {
+  margin-top: 0.25rem;
+  height: 5px;
+}
+
+.hud__bar-fill--shield {
+  background: linear-gradient(90deg, #4a90d9, #64b5f6);
+}
+
 .hud__bar-fill--breach {
   background: linear-gradient(90deg, #ff4466, #ff8844);
 }

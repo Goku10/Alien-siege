@@ -1,6 +1,6 @@
 import { GROUND_ENEMY_DEFINITIONS } from '../data/groundEnemies';
 import { isInBreachZone, type BaseLayout } from '../utils/baseLayout';
-import type { GroundEnemyState, GroundEnemyTypeId } from '../types';
+import type { GroundEnemyState, GroundEnemyTypeId, GroundSpawnModifiers } from '../types';
 import { ObjectPool } from '../../utils/objectPool';
 
 let nextId = 1;
@@ -50,11 +50,6 @@ export function spawnGroundEnemy(
   g.attackInterval = def.attackInterval;
   g.attackRange = def.attackRange;
   return g;
-}
-
-export interface GroundSpawnModifiers {
-  speedMultiplier: number;
-  healthMultiplier: number;
 }
 
 export function applyGroundModifiers(

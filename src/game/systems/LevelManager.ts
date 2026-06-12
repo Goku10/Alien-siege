@@ -30,12 +30,14 @@ export class LevelManager {
     this.callbacks = callbacks;
   }
 
-  reset(): void {
+  reset(skipIntro = false): void {
     this.levelIndex = 0;
     this.phase = 'intro';
     this.phaseTimer = BALANCING.levels.introDuration;
     this.lastLevelBonus = 0;
-    this.callbacks.onLevelIntro?.(this.getCurrentLevel());
+    if (!skipIntro) {
+      this.callbacks.onLevelIntro?.(this.getCurrentLevel());
+    }
   }
 
   getPhase(): LevelPhase {

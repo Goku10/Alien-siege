@@ -110,8 +110,10 @@ export class ShopManager {
       if (!item || item.category !== 'defense_upgrades') continue;
       for (const effect of item.effects) {
         if (effect.type !== 'defense' || effect.op !== 'add') continue;
-        if (effect.field === 'maxHealthBonus' || effect.field === 'shieldCapacityBonus') {
+        if (effect.field === 'maxHealthBonus') {
           base.addMaxHealth(effect.value);
+        } else if (effect.field === 'shieldCapacityBonus') {
+          base.addShieldCapacity(effect.value);
         }
       }
       this.appliedDefenseBonuses.add(itemId);

@@ -61,9 +61,6 @@ export function GameCanvas() {
           onTitle={goToTitle}
         />
       )}
-      {screen === 'playing' && (
-        <div className="prototype-badge">Phase 11 — Polish</div>
-      )}
     </div>
   );
 }

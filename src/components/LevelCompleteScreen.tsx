@@ -13,7 +13,7 @@ function formatAccuracy(percent: number | null): string {
 
 export function LevelCompleteScreen({ snapshot, onContinue, onTitle }: LevelCompleteScreenProps) {
   const allDone = snapshot.isCampaignComplete;
-  const showNextLevel = !allDone && snapshot.level < snapshot.totalLevels;
+  const showShop = !allDone;
   const summary = snapshot.levelSummary;
 
   return (
@@ -109,9 +109,9 @@ export function LevelCompleteScreen({ snapshot, onContinue, onTitle }: LevelComp
         )}
 
         <div className="panel__actions">
-          {showNextLevel && (
+          {showShop && (
             <button type="button" className="btn btn--primary" onClick={onContinue}>
-              Visit Shop
+              {snapshot.level >= snapshot.totalLevels ? 'Visit Final Shop' : 'Visit Shop'}
             </button>
           )}
           <button type="button" className="btn btn--secondary" onClick={onTitle}>

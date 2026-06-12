@@ -139,7 +139,9 @@ export function ShopScreen({ snapshot, onContinue, onBuy, onEquip }: ShopScreenP
 
         <div className="panel__actions shop__actions">
           <button type="button" className="btn btn--primary" onClick={onContinue}>
-            Deploy Next Level
+            {snapshot.level >= snapshot.totalLevels
+              ? 'Finish Campaign'
+              : 'Deploy Next Level'}
           </button>
         </div>
       </div>

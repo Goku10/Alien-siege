@@ -22,6 +22,10 @@ export interface GameCallbacks {
   onSnapshot?: (snapshot: GameSnapshot) => void;
 }
 
+interface ResetSessionOptions {
+  skipIntro?: boolean;
+}
+
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -77,16 +81,16 @@ export class Game {
       onDefeated: (scoreBonus) => {
         const levelId = this.levels.getLevelNumber();
         const reward = this.economy.awardBossDefeat(scoreBonus, levelId);
-        const { width, height } = BALANCING.canvas;
+        const { popupY } = BALANCING.ui;
         this.effects.spawnScorePopup(
           width / 2,
-          height * 0.38,
+          height * popupY.bossDownScore,
           `BOSS DOWN +${reward.score}`,
           'announce',
         );
         this.effects.spawnScorePopup(
           width / 2,
-          height * 0.44,
+          height * popupY.bossDownCredits,
           `+${reward.credits} CREDITS`,
           'credits',
         );
@@ -103,26 +107,27 @@ export class Game {
       onWaveStart: (waveNum, totalWaves) => {
         this.effects.spawnScorePopup(
           width / 2,
-          height * 0.28,
+          height * BALANCING.ui.popupY.waveStart,
           `WAVE ${waveNum} / ${totalWaves}`,
           'announce',
         );
       },
       onWaveComplete: (_waveNum, clearBonus) => {
         const reward = this.economy.awardWaveClear(clearBonus);
+        const { popupY } = BALANCING.ui;
         this.effects.spawnScorePopup(
           width / 2,
-          height * 0.35,
+          height * popupY.waveClearScore,
           `WAVE CLEAR +${reward.score}`,
           'score',
         );
         this.effects.spawnScorePopup(
           width / 2,
-          height * 0.41,
+          height * popupY.waveClearCredits,
           `+${reward.credits} CREDITS`,
           'credits',
         );
-        this.addScreenShake(3);
+        this.addScreenShake(BALANCING.effects.waveClearShake);
       },
       onLevelWavesComplete: () => {
         this.levels.onAllWavesComplete();
@@ -131,6 +136,7 @@ export class Game {
 
     this.levels = new LevelManager({
       onLevelIntro: () => {
+        this.prepareLevelTransition();
         this.setScreen('playing');
       },
       onCombatStart: (level) => {
@@ -145,8 +151,16 @@ export class Game {
       },
       onBossFightStart: (level) => {
         this.bosses.spawn(level.id, width);
-        this.effects.spawnScorePopup(width / 2, height * 0.3, 'ENGAGE MOTHERSHIP', 'phase');
-        this.effects.spawnScreenFlash('#ff4466', 0.22);
+        this.effects.spawnScorePopup(
+          width / 2,
+          height * BALANCING.ui.popupY.bossEngage,
+          'ENGAGE MOTHERSHIP',
+          'phase',
+        );
+        this.effects.spawnScreenFlash(
+          BALANCING.ui.bossEngageFlashColor,
+          BALANCING.ui.bossEngageFlashDuration,
+        );
         this.setScreen('playing');
       },
       onLevelComplete: (level, scoreBonus) => {
@@ -157,13 +171,11 @@ export class Game {
           this.base.breach,
           this.base.maxBreach,
         );
-        if (this.levels.getLevelNumber() >= this.levels.getTotalLevels()) {
-          this.campaignComplete = true;
-        }
         this.bosses.reset();
+        this.entities.clearThreats();
         this.effects.spawnScorePopup(
           width / 2,
-          height * 0.32,
+          height * BALANCING.ui.popupY.levelClear,
           `LEVEL CLEAR +${scoreBonus}`,
           'announce',
         );
@@ -226,7 +238,7 @@ export class Game {
       this.syncLoadout();
       if (item) {
         this.shopToast = { message: `Purchased ${item.name}`, variant: 'purchase' };
-        this.shopToastTimer = 2.2;
+        this.shopToastTimer = BALANCING.ui.shopToastDuration.purchase;
       }
     }
     this.emitSnapshot();
@@ -239,27 +251,32 @@ export class Game {
       this.syncLoadout();
       if (item) {
         this.shopToast = { message: `Equipped ${item.name}`, variant: 'equip' };
-        this.shopToastTimer = 1.8;
+        this.shopToastTimer = BALANCING.ui.shopToastDuration.equip;
       }
     }
     this.emitSnapshot();
   }
 
-  beginPrototypeSession(): void {
+  /** Start a fresh campaign run from title or game over. */
+  startNewRun(): void {
     this.resetSession();
     this.setScreen('playing');
   }
 
+  /** @deprecated Use startNewRun() */
+  beginPrototypeSession(): void {
+    this.startNewRun();
+  }
+
+  /** @deprecated Use startNewRun() */
   restartSession(): void {
-    this.resetSession();
-    this.setScreen('playing');
+    this.startNewRun();
   }
 
   continueToNextLevel(): void {
     const hasNext = this.levels.continueAfterLevel();
     if (hasNext) {
-      this.waves.reset();
-      this.bosses.reset();
+      this.prepareLevelTransition();
       this.setScreen('playing');
     } else {
       this.campaignComplete = true;
@@ -268,27 +285,29 @@ export class Game {
   }
 
   togglePause(): void {
-    if (this.screen === 'playing' && this.levels.isGameplayActive()) {
+    if (this.screen === 'playing') {
       this.setScreen('paused');
     } else if (this.screen === 'paused') {
       this.setScreen('playing');
     }
   }
 
-  resetSession(): void {
+  resetSession(options: ResetSessionOptions = {}): void {
     this.elapsedTime = 0;
     this.gameOverReason = null;
     this.finalScore = 0;
     this.levelCompleteBonus = 0;
     this.campaignComplete = false;
     this.shakeIntensity = 0;
+    this.shopToast = null;
+    this.shopToastTimer = 0;
     this.base.reset();
     this.economy.reset();
     this.effects.clear();
     this.entities.clear();
     this.waves.reset();
     this.bosses.reset();
-    this.levels.reset();
+    this.levels.reset(options.skipIntro ?? false);
     this.shop.reset();
     this.turret = new Turret(
       BALANCING.canvas.width,
@@ -296,6 +315,16 @@ export class Game {
       this.shop.getWeaponStats(),
     );
     this.syncLoadout();
+  }
+
+  private prepareLevelTransition(): void {
+    this.waves.reset();
+    this.bosses.reset();
+    this.entities.clearThreats();
+    this.effects.clear();
+    this.turret.resetCombatState();
+    this.shopToast = null;
+    this.shopToastTimer = 0;
   }
 
   private syncLoadout(): void {
@@ -316,8 +345,9 @@ export class Game {
     this.finalScore = this.economy.score;
     this.gameOverReason = this.base.getDefeatReason();
     this.bosses.reset();
+    this.entities.clearThreats();
     this.setScreen('gameOver');
-    this.addScreenShake(10);
+    this.addScreenShake(BALANCING.effects.gameOverShake);
   }
 
   private update(dt: number): void {
@@ -341,6 +371,10 @@ export class Game {
     this.levels.update(dt);
 
     if (this.screen === 'bossWarning') {
+      if (this.input.consumeEscape()) {
+        this.setScreen('paused');
+        return;
+      }
       this.effects.update(dt);
       this.decayShake(dt);
       this.emitSnapshot();
@@ -348,6 +382,10 @@ export class Game {
     }
 
     if (this.screen === 'playing' && !this.levels.isGameplayActive()) {
+      if (this.input.consumeEscape()) {
+        this.setScreen('paused');
+        return;
+      }
       this.effects.update(dt);
       this.decayShake(dt);
       this.emitSnapshot();
@@ -378,10 +416,7 @@ export class Game {
       this.turret.applyHeat();
       this.turret.consumeAmmo();
       this.turret.markFired(now);
-      const shake =
-        weapon.kind === 'missile' ? 5 :
-        weapon.kind === 'flak' ? 3 :
-        weapon.kind === 'laser' ? 2 : 1.5;
+      const shake = BALANCING.effects.fireShake[weapon.kind] ?? 1.5;
       this.addScreenShake(shake);
     }
 
@@ -508,6 +543,8 @@ export class Game {
       wave: this.waves.getWaveNumber(),
       baseHealth: this.base.health,
       maxBaseHealth: this.base.maxHealth,
+      baseShield: this.base.shield,
+      maxBaseShield: this.base.maxShield,
       breach: this.base.breach,
       maxBreach: this.base.maxBreach,
       combo: this.economy.getCombo(),

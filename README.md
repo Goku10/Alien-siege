@@ -1,8 +1,8 @@
 # Alien Siege: Turret Defense
 
-A modern arcade turret defense shooter inspired by the fixed-turret loop of *Paratrooper*, reskinned as an alien invasion defense game.
+A browser-based arcade turret defense game. Defend a planetary base across three levels, earn credits, upgrade between levels, and defeat the mothership boss.
 
-> **Resuming development?** Read [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md) for phase history, architecture, and current state. AI agents should also read [`AGENTS.md`](AGENTS.md).
+> **Resuming development?** See [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md) for phase history and [`AGENTS.md`](AGENTS.md) for agent conventions.
 
 ## Quick Start
 
@@ -14,75 +14,102 @@ npm run dev
 
 Open the URL shown in the terminal (typically `http://localhost:5173`).
 
-### Build for production
+### Production build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Controls (Phase 1)
+## Controls
 
 | Action | Desktop |
 |--------|---------|
-| Aim | Mouse (or `A`/`D`, arrow keys) |
+| Aim | Mouse or `A` / `D` / arrow keys |
 | Fire | Left click or `Space` |
-| Pause | `Esc` |
+| Pause | `Esc` (works during combat, level intro, and boss warning) |
 | Menu confirm | `Enter` |
 
-## Project Structure
+## Campaign Flow
+
+1. **Title** → Start Defense
+2. **Level intro** (3.5s) → timed waves with scaling enemy mix
+3. **Boss warning** → mothership fight
+4. **Level complete** → score/credits summary
+5. **Shop** → buy weapons and tiered upgrades (persists for the rest of the run)
+6. Repeat for levels 2–3, then **campaign complete**
+
+**Lose** if breach reaches 100% or base health (and shields) hits zero.
+
+**Session persistence:** Progress is in-memory only. Refreshing the page or choosing *Try Again* / *Quit to Title* starts a new run with no upgrades.
+
+## Architecture
 
 ```
-src/
-├── components/       # React UI (menus, HUD, overlays)
-├── game/
-│   ├── data/         # Balancing & config (turretConfig.ts, balancing.ts)
-│   ├── entities/     # Turret, Projectile, enemies (future)
-│   ├── rendering/    # Canvas draw layers
-│   ├── systems/      # Input, loop, entities, waves (future)
-│   ├── Game.ts       # Main game orchestrator
-│   └── types.ts      # Shared TypeScript interfaces
-├── hooks/            # React hooks (useGameCanvas)
-├── styles/           # Global & game CSS
-└── utils/            # Math helpers, object pooling
+React shell (menus, HUD, overlays)
+        ↕ callbacks / GameSnapshot
+Game.ts orchestrator
+        ↕
+Systems: LevelManager, WaveManager, CollisionSystem, ThreatSystem,
+         EconomyManager, ShopManager, BossManager, EffectsManager
+        ↕
+Entities (pooled) + Canvas Renderer layers
+        ↕
+Data configs (balancing, enemies, waves, shop, weapons)
 ```
 
-## Architecture Summary (Phase 1)
+- **React** owns DOM overlays; **Canvas** renders all gameplay at 1280×720 (scaled to viewport).
+- **`Game`** runs the update loop and emits snapshots to React each frame.
+- **Object pooling** for projectiles, enemies, and particles keeps GC pressure low.
+- **Data-driven** enemies, waves, shop items, and level scaling — tune in `src/game/data/`.
 
-- **React** owns the app shell: title screen, pause overlay, HUD containers.
-- **HTML5 Canvas** renders all gameplay via a fixed logical resolution (1280×720), scaled to fit the viewport.
-- **`Game`** class orchestrates update/render, owns session state, and communicates with React through callbacks.
-- **`GameLoop`** uses `requestAnimationFrame` with delta-time updates (capped at 30 FPS minimum step).
-- **`InputManager`** normalizes mouse/keyboard into a single `InputState`.
-- **`Turret`** rotates toward aim target with clamped firing arc; **`EntityManager`** + object pool handle projectiles.
-- **`Renderer`** composes background, projectiles, muzzle flashes, and turret layers.
+### Key files
 
-## Balancing Files
+| File | Role |
+|------|------|
+| `src/game/Game.ts` | Session lifecycle, screen state, update order |
+| `src/hooks/useGameCanvas.ts` | React bridge to Game |
+| `src/game/systems/LevelManager.ts` | Campaign FSM (intro → combat → boss → complete) |
+| `src/game/systems/CollisionSystem.ts` | Projectile hits, splash, kill rewards |
+| `src/game/systems/ShopManager.ts` | Purchases, loadout, defense bonuses |
+| `src/game/systems/EntityManager.ts` | Entity pools and spawn helpers |
 
-| File | Purpose |
-|------|---------|
-| `src/game/data/balancing.ts` | Global constants (canvas size, base health, combo, waves) |
-| `src/game/data/turretConfig.ts` | Turret rotation + Machine Gun weapon stats |
-| `src/game/data/enemies.ts` | Enemy type definitions (HP, speed, patterns, score) |
-| `src/game/data/waveCompositions.ts` | Data-driven wave blueprints per level |
-| `src/game/data/levelScaling.ts` | Per-level difficulty multipliers |
-| `src/game/data/levels.ts` | Level wave schedules and bonuses |
-| `src/game/data/credits.ts` | Credit earn rates (kills, waves, boss, bonuses) |
-| `src/game/data/shopItems.ts` | Shop catalog + tiered upgrade chains |
-| `src/game/data/upgradeEffects.ts` | Upgrade effect field definitions |
-| `src/game/data/weapons.ts` | Weapon definitions for shop loadout |
+## Balancing & Config
 
-## Current Status — Phase 11 Complete
+All gameplay tuning lives under `src/game/data/`:
 
-- [x] Phases 1–10: Full campaign loop, shop, credits, weapons, enemy variety
-- [x] **HUD polish** — danger vignettes, pulsing health/breach bars, combo highlight
-- [x] **Combat feedback** — kill/credits/combo popups, heavy-hit shake, boss phase flash
-- [x] **VFX** — weapon-colored muzzle flashes, tapered trails, improved warnings
-- [x] **Screen UX** — pause/game-over polish, shop toasts, expanded how-to-play
+| File | Tune here |
+|------|-----------|
+| `balancing.ts` | Canvas, base HP, combo, shake, combat falloff, UI popup positions |
+| `enemies.ts` | Flying enemy stats, shields, drops |
+| `groundEnemies.ts` | Ground unit stats, pod payload weights |
+| `waveCompositions.ts` | Per-level wave blueprints |
+| `levelScaling.ts` | Per-level difficulty multipliers |
+| `levels.ts` | Level metadata and wave bindings |
+| `credits.ts` | Credit earn rates |
+| `weapons.ts` | Weapon stat definitions |
+| `shopItems.ts` | Shop catalog and upgrade chains |
+| `bossConfig.ts` | Mothership boss phases and attacks |
+| `spawnModifiers.ts` | Helpers mapping level scaling → spawn modifiers |
 
-### Next Phases
+## Shop (within a run)
 
-- Phase 12: Audio, persistence, or expansion content
+- **Credits** are earned from kills, wave clears, boss defeats, and performance bonuses.
+- **Purchases persist** across levels until game over or quit to title.
+- **Defense upgrades:** HP bonuses raise max health; shield upgrades add a separate shield pool that absorbs damage first.
+- **Weapons** can be bought and equipped; stat upgrades stack via tiered chains.
+- **Final level:** shop is still available before the campaign complete screen.
+
+## Current Status — MVP (Phase 12)
+
+Complete playable campaign:
+
+- 3 levels with distinct wave compositions and scaling
+- 6 flying + 4 ground enemy types
+- 5 weapons with tiered upgrades
+- Between-level shop with loadout previews
+- Boss fight with 3 phases
+- Polished HUD, combat feedback, and screen UX
 
 ## License
 

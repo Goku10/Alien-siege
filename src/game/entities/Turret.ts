@@ -28,6 +28,17 @@ export class Turret {
     };
   }
 
+  resetCombatState(): void {
+    this.state.heat = 0;
+    this.state.cooling = false;
+    this.state.reloading = false;
+    this.state.reloadTimer = 0;
+    this.state.reloadDuration = 0;
+    if (this.weapon.magazineSize > 0) {
+      this.state.magazine = this.weapon.magazineSize;
+    }
+  }
+
   setWeapon(weapon: WeaponStats): void {
     this.weapon = weapon;
     this.state.maxHeat = weapon.maxHeat;

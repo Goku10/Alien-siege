@@ -3,7 +3,7 @@ import { ENEMY_DEFINITIONS, getPodPayloadForEnemy } from '../data/enemies';
 import { pickPodPayload } from '../data/groundEnemies';
 import type { LevelScaling } from '../data/levelScaling';
 import { canEnemyDrop, tickEnemyDrop } from '../entities/Enemy';
-import type { GroundSpawnModifiers } from '../entities/GroundEnemy';
+import type { GroundSpawnModifiers } from '../types';
 import type { EntityManager } from './EntityManager';
 import type { BaseDefenseSystem } from './BaseDefenseSystem';
 import type { EffectsManager } from './EffectsManager';
@@ -113,7 +113,7 @@ export class ThreatSystem {
         this.groundMods,
       );
       effects.spawnExplosion(pod.x, pod.y, pod.radius, '#52b788');
-      pod.active = false;
+      entities.releaseDropPod(pod);
     }
 
     entities.groundEnemies = entities.groundEnemies.filter((g) => {

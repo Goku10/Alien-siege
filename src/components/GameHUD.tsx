@@ -9,6 +9,11 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
   if (!visible) return null;
 
   const healthPct = (snapshot.baseHealth / snapshot.maxBaseHealth) * 100;
+  const shieldPct =
+    snapshot.maxBaseShield > 0
+      ? (snapshot.baseShield / snapshot.maxBaseShield) * 100
+      : 0;
+  const showShield = snapshot.maxBaseShield > 0;
   const breachPct = (snapshot.breach / snapshot.maxBreach) * 100;
   const heatPct = (snapshot.heat / snapshot.maxHeat) * 100;
   const hasMagazine = snapshot.magazineSize > 0;
@@ -126,6 +131,14 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
               style={{ width: `${healthPct}%` }}
             />
           </div>
+          {showShield && (
+            <div className="hud__bar hud__bar--shield">
+              <div
+                className="hud__bar-fill hud__bar-fill--shield"
+                style={{ width: `${shieldPct}%` }}
+              />
+            </div>
+          )}
         </div>
 
         <div
