@@ -233,6 +233,20 @@ export interface MuzzleFlash {
   active: boolean;
 }
 
+export interface LevelSummary {
+  scoreGained: number;
+  creditsEarned: number;
+  enemiesDestroyed: number;
+  accuracyPercent: number | null;
+  bossCreditReward: number;
+  killCredits: number;
+  waveCredits: number;
+  levelCompleteCredits: number;
+  accuracyBonus: number;
+  breachBonus: number;
+  levelScoreBonus: number;
+}
+
 export interface GameSnapshot {
   score: number;
   credits: number;
@@ -264,6 +278,7 @@ export interface GameSnapshot {
   showLevelIntro: boolean;
   levelIntroText: string;
   levelCompleteBonus: number;
+  levelSummary: LevelSummary | null;
   isCampaignComplete: boolean;
   totalLevels: number;
   bossPhase: number;

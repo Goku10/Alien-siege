@@ -26,13 +26,9 @@ export const BALANCING = {
     offsetY: 60,
   },
 
-  /** Economy defaults (used in later phases) */
+  /** Session economy — credit payouts live in credits.ts */
   economy: {
     startingCredits: 0,
-    killCreditMultiplier: 1,
-    waveClearBonus: 50,
-    levelCompleteBonus: 200,
-    bossKillBonus: 500,
   },
 
   /** Combo system */

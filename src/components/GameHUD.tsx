@@ -59,7 +59,9 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
         </div>
         <div className="hud__stat">
           <span className="hud__label">CREDITS</span>
-          <span className="hud__value hud__value--credits">{snapshot.credits}</span>
+          <span className="hud__value hud__value--credits">
+            {snapshot.credits.toLocaleString()}
+          </span>
         </div>
         <div className="hud__stat hud__stat--level">
           <span className="hud__label">LEVEL</span>

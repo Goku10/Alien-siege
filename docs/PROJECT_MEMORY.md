@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 5 complete  
+**Current phase:** Phase 6 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -43,8 +43,9 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 3 | Ground enemies, breach system | ✅ Done |
 | 4 | Level structure, scaling waves, boss warning scaffold | ✅ Done |
 | 5 | Mothership boss fight (3 phases) | ✅ Done |
-| 6 | Credits economy + between-level shop | ⏳ Next |
-| 7 | Polish — particles, audio hooks, balance pass | Pending |
+| 6 | Credits economy + level-end summary | ✅ Done |
+| 7 | Between-level shop + upgrades | ⏳ Next |
+| 8 | Polish — particles, audio hooks, balance pass | Pending |
 
 ---
 
@@ -148,7 +149,23 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 5)
+### Phase 6 — Credits economy
+**Commit:** *(pending)* — *Phase 6: Credits economy separate from score.*
+
+**Built:**
+- `src/game/data/credits.ts` — all credit payout tables (kills, waves, level, boss, performance bonuses)
+- `EconomyManager` split: **score** (arcade + combo) vs **credits** (spendable currency)
+- Credits earned from: enemy/threat kills, wave clear, boss defeat, level complete, accuracy + low-breach bonuses
+- Per-level tracking: kills, shots fired/hit, credit breakdown for summary
+- HUD shows live session credits (persists across levels in a run)
+- `LevelCompleteScreen` → level-end **summary**: score gained, credits earned, enemies destroyed, accuracy, boss reward, performance bonuses, total credits
+- Score popups remain score-only; wave/boss credit gains shown as separate popups
+
+**Intentionally deferred:** shop, spending credits.
+
+---
+
+## Current state (after Phase 6)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
@@ -169,14 +186,15 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | LevelManager | `src/game/systems/LevelManager.ts` | intro → combat → bossWarning → bossFight → complete |
 | BossManager | `src/game/systems/BossManager.ts` | Mothership phases, attacks, defeat |
 | WaveManager | `src/game/systems/WaveManager.ts` | Per-level timed wave spawns |
-| EconomyManager | `src/game/systems/EconomyManager.ts` | Score, combo |
+| EconomyManager | `src/game/systems/EconomyManager.ts` | Score, combo, credits, level summary |
 | EffectsManager | `src/game/systems/EffectsManager.ts` | VFX + warning markers |
 | Renderer | `src/game/rendering/Renderer.ts` | Full layered draw |
 
 ### React UI
 | Component | Role |
 |-----------|------|
-| `GameHUD` | Score, health, breach, danger alerts |
+| `GameHUD` | Score, credits, health, breach, danger alerts |
+| `LevelCompleteScreen` | Level-end score + credits summary |
 | `GameOverScreen` | Defeat + restart |
 | `PauseOverlay` | Resume / quit |
 | `TitleScreen` | Start + how-to-play |
@@ -185,13 +203,12 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | File | Tune here |
 |------|-----------|
 | `src/game/data/balancing.ts` | Base HP, breach, bomb damage, threat speeds |
+| `src/game/data/credits.ts` | Credit rewards — kills, waves, level, boss, bonuses |
 | `src/game/data/groundEnemies.ts` | Crawler/spitter/leaper stats |
 | `src/game/data/enemies.ts` | Flyer drops (interval, max drops) |
 | `src/game/utils/baseLayout.ts` | Base/breach zone geometry |
 
 ### HUD fields (placeholders until later phases)
-- **Credits** — always 0 (Phase 5+)
-- **Level** — fixed at 1
 - **Secondary cooldown** — not implemented
 
 ---
@@ -231,13 +248,13 @@ input → turret → firing → entities.update → flying drops
 
 ---
 
-## Phase 6 preview (next work)
+## Phase 7 preview (next work)
 
-- [ ] Credits economy (earn from kills, waves, boss, level clear)
 - [ ] Between-level shop screen
 - [ ] Purchasable weapons and upgrades
+- [ ] Spend credits earned in Phase 6
 
-**Config:** `src/game/data/bossConfig.ts` for boss tuning.
+**Config:** `src/game/data/credits.ts` for earn rates; `shopItems.ts` for prices.
 
 ---
 
@@ -262,7 +279,6 @@ When finishing a phase:
 
 ## Known issues / tech debt
 
-- Credits shown in HUD but never earned (by design until Phase 5).
 - Flyers exiting screen without kill causes no penalty.
 - Ground threats persist across wave transitions (intentional pressure).
 - `ShopManager` is still a stub.

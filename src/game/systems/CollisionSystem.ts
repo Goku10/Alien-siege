@@ -1,3 +1,4 @@
+import { getKillCredits } from '../data/credits';
 import { ENEMY_DEFINITIONS } from '../data/enemies';
 import { GROUND_ENEMY_DEFINITIONS } from '../data/groundEnemies';
 import { damageBomb } from '../entities/Bomb';
@@ -89,9 +90,12 @@ export class CollisionSystem {
 
       if (enemy.health <= 0) {
         const def = ENEMY_DEFINITIONS[enemy.typeId];
-        const points = economy.registerKill(enemy.scoreValue);
+        const reward = economy.registerKill(
+          enemy.scoreValue,
+          getKillCredits(enemy.typeId),
+        );
         effects.spawnExplosion(enemy.x, enemy.y, enemy.radius, def.accentColor);
-        effects.spawnScorePopup(enemy.x, enemy.y - 20, `+${points}`);
+        effects.spawnScorePopup(enemy.x, enemy.y - 20, `+${reward.score}`);
         callbacks.onScreenShake?.(def.shakeOnDeath);
       }
       return true;
@@ -117,9 +121,12 @@ export class CollisionSystem {
 
       if (g.health <= 0) {
         const def = GROUND_ENEMY_DEFINITIONS[g.typeId];
-        const points = economy.registerKill(g.scoreValue);
+        const reward = economy.registerKill(
+          g.scoreValue,
+          getKillCredits(g.typeId),
+        );
         effects.spawnExplosion(g.x, g.y, g.radius, def.accentColor);
-        effects.spawnScorePopup(g.x, g.y - 16, `+${points}`);
+        effects.spawnScorePopup(g.x, g.y - 16, `+${reward.score}`);
         callbacks.onScreenShake?.(def.shakeOnDeath);
         g.active = false;
       }
@@ -145,9 +152,12 @@ export class CollisionSystem {
       this.consumeProjectile(proj);
 
       if (b.health <= 0) {
-        const points = economy.registerKill(b.scoreValue);
+        const reward = economy.registerKill(
+          b.scoreValue,
+          getKillCredits('bomb'),
+        );
         effects.spawnExplosion(b.x, b.y, b.radius * 1.5, '#ffaa00');
-        effects.spawnScorePopup(b.x, b.y - 12, `+${points}`);
+        effects.spawnScorePopup(b.x, b.y - 12, `+${reward.score}`);
         entities.releaseBomb(b);
         callbacks.onScreenShake?.(3);
       }
@@ -173,9 +183,12 @@ export class CollisionSystem {
       this.consumeProjectile(proj);
 
       if (p.health <= 0) {
-        const points = economy.registerKill(p.scoreValue);
+        const reward = economy.registerKill(
+          p.scoreValue,
+          getKillCredits('pod'),
+        );
         effects.spawnExplosion(p.x, p.y, p.radius, '#52b788');
-        effects.spawnScorePopup(p.x, p.y - 12, `+${points}`);
+        effects.spawnScorePopup(p.x, p.y - 12, `+${reward.score}`);
         entities.releaseDropPod(p);
         callbacks.onScreenShake?.(2);
       }

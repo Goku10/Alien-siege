@@ -69,8 +69,20 @@ export class Game {
     this.base = new BaseDefenseSystem();
     this.threats = new ThreatSystem();
     this.bosses = new BossManager({
-      onDefeated: (bonus) => {
-        this.economy.registerKill(bonus);
+      onDefeated: (scoreBonus) => {
+        const levelId = this.levels.getLevelNumber();
+        const reward = this.economy.awardBossDefeat(scoreBonus, levelId);
+        const { width, height } = BALANCING.canvas;
+        this.effects.spawnScorePopup(
+          width / 2,
+          height * 0.38,
+          `BOSS DOWN +${reward.score}`,
+        );
+        this.effects.spawnScorePopup(
+          width / 2,
+          height * 0.44,
+          `+${reward.credits} CREDITS`,
+        );
         this.levels.onBossDefeated();
       },
       onPhaseChange: () => {
@@ -91,8 +103,17 @@ export class Game {
         );
       },
       onWaveComplete: (_waveNum, clearBonus) => {
-        const bonus = this.economy.awardWaveClear(clearBonus);
-        this.effects.spawnScorePopup(width / 2, height * 0.35, `WAVE CLEAR +${bonus}`);
+        const reward = this.economy.awardWaveClear(clearBonus);
+        this.effects.spawnScorePopup(
+          width / 2,
+          height * 0.35,
+          `WAVE CLEAR +${reward.score}`,
+        );
+        this.effects.spawnScorePopup(
+          width / 2,
+          height * 0.41,
+          `+${reward.credits} CREDITS`,
+        );
         this.addScreenShake(3);
       },
       onLevelWavesComplete: () => {
@@ -105,6 +126,7 @@ export class Game {
         this.setScreen('playing');
       },
       onCombatStart: (level) => {
+        this.economy.beginLevel();
         this.waves.startLevel(level, this.levels.getScaling());
       },
       onBossWarning: () => {
@@ -116,9 +138,14 @@ export class Game {
         this.effects.spawnScorePopup(width / 2, height * 0.3, 'ENGAGE MOTHERSHIP');
         this.setScreen('playing');
       },
-      onLevelComplete: (_level, bonus) => {
-        this.levelCompleteBonus = bonus;
-        this.economy.score += bonus;
+      onLevelComplete: (level, scoreBonus) => {
+        this.levelCompleteBonus = scoreBonus;
+        this.economy.completeLevel(
+          level.id,
+          scoreBonus,
+          this.base.breach,
+          this.base.maxBreach,
+        );
         if (this.levels.getLevelNumber() >= this.levels.getTotalLevels()) {
           this.campaignComplete = true;
         }
@@ -126,7 +153,7 @@ export class Game {
         this.effects.spawnScorePopup(
           width / 2,
           height * 0.32,
-          `LEVEL CLEAR +${bonus}`,
+          `LEVEL CLEAR +${scoreBonus}`,
         );
         this.setScreen('levelComplete');
       },
@@ -273,6 +300,7 @@ export class Game {
     const now = this.elapsedTime;
     if (this.turret.wantsToFire(input) && this.turret.canFire(now)) {
       const muzzle = this.turret.getMuzzlePosition();
+      this.economy.recordShotFired();
       this.entities.spawnBullet(muzzle.x, muzzle.y, this.turret.state.angle);
       this.entities.addMuzzleFlash(this.turret.createMuzzleFlash());
       this.turret.applyHeat();
@@ -311,7 +339,10 @@ export class Game {
       this.effects,
       this.economy,
       this.bosses,
-      { onScreenShake: (amount) => this.addScreenShake(amount) },
+      {
+        onScreenShake: (amount) => this.addScreenShake(amount),
+        onHit: () => this.economy.recordShotHit(),
+      },
     );
     this.entities.pruneProjectiles();
 
@@ -377,7 +408,7 @@ export class Game {
 
     this.callbacks.onSnapshot?.({
       score: this.economy.score,
-      credits: 0,
+      credits: this.economy.credits,
       level: this.levels.getLevelNumber(),
       wave: this.waves.getWaveNumber(),
       baseHealth: this.base.health,
@@ -406,6 +437,7 @@ export class Game {
       showLevelIntro: phase === 'intro',
       levelIntroText: level.introText,
       levelCompleteBonus: this.levelCompleteBonus,
+      levelSummary: this.economy.getLastLevelSummary(),
       isCampaignComplete: this.campaignComplete,
       totalLevels: this.levels.getTotalLevels(),
       bossPhase: boss?.phase ?? 0,

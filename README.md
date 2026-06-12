@@ -64,23 +64,21 @@ src/
 | `src/game/data/balancing.ts` | Global constants (canvas size, base health, combo, waves) |
 | `src/game/data/turretConfig.ts` | Turret rotation + Machine Gun weapon stats |
 | `src/game/data/enemies.ts` | Enemy type definitions (HP, speed, patterns, score) |
-| `src/game/data/levels.ts` | Level 1 wave spawn schedules |
+| `src/game/data/levels.ts` | Level wave schedules and bonuses |
+| `src/game/data/credits.ts` | Credit earn rates (kills, waves, boss, bonuses) |
 
-## Current Status — Phase 5 Complete
+## Current Status — Phase 6 Complete
 
-- [x] Phases 1–4: Combat, defense, level progression
-- [x] Alien Mothership boss after each level's waves
-- [x] 3 boss phases with drones, bomb spread, beam, shield
-- [x] Weak-point cores (2× damage) vs reduced body hits
-- [x] Boss health bar in HUD, warning overlay, defeat → level clear
+- [x] Phases 1–5: Combat, defense, levels, mothership boss
+- [x] **Credits** as spendable currency separate from arcade **score**
+- [x] Earn credits from kills, wave clear, boss defeat, level complete
+- [x] Optional accuracy and low-breach performance bonuses
+- [x] HUD credits display; level-end summary screen with full breakdown
 
 ### Next Phases
 
-- Phase 6: Credits economy + between-level shop
-- Phase 4: Boss fights
-- Phase 5: Score/credits economy
-- Phase 6: Shop + upgrades
-- Phase 7: Polish (particles, combos, audio hooks)
+- Phase 7: Between-level shop + upgrades
+- Phase 8: Polish (particles, audio hooks, balance pass)
 
 ## License
 

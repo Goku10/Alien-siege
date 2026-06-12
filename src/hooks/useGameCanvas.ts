@@ -33,6 +33,7 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   showLevelIntro: false,
   levelIntroText: '',
   levelCompleteBonus: 0,
+  levelSummary: null,
   isCampaignComplete: false,
   totalLevels: 3,
   bossPhase: 0,
