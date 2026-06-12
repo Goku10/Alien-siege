@@ -5,7 +5,7 @@
 
 **Last updated:** 2026-06-12 (session closed — MVP complete)  
 **Current phase:** Phase 12 complete (MVP)  
-**Latest commit:** `848df14` on `main`  
+**Latest commit:** `3753a13` on `main`  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -356,6 +356,7 @@ input → turret → firing → entities.update → flying drops
 | `6ac30b9` | 2026-06-12 | Project memory update for Phase 11 |
 | `332b693` | 2026-06-12 | Phase 12 — MVP stabilization |
 | `848df14` | 2026-06-12 | Project memory update for Phase 12 |
+| `3753a13` | 2026-06-12 | Session close — memory wrap-up |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
