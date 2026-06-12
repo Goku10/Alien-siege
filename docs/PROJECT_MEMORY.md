@@ -91,7 +91,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 3 — Base defense
-**Commit:** *(pending push)* — *Phase 3: Ground threats, breach system, game over.*
+**Commit:** `e654341` — *Phase 3: Ground threats, breach system, game over.*
 
 **Built:**
 - **Drop Carriers** drop alien pods (shootable mid-air) → spawn ground enemies on landing
@@ -187,6 +187,8 @@ input → turret → firing → entities.update (flyers move)
 | `162ad16` | 2026-06-12 | Phase 1 — scaffold + turret prototype |
 | `8068770` | 2026-06-12 | Phase 2 — enemies, waves, scoring, VFX |
 | `e942076` | 2026-06-12 | Project memory module + AGENTS.md |
+| `2e6a144` | 2026-06-12 | Memory doc git log update |
+| `e654341` | 2026-06-12 | Phase 3 — ground threats, breach, game over |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
