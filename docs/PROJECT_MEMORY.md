@@ -114,7 +114,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 4 — Level progression
-**Commit:** *(pending push)* — *Phase 4: Level manager, scaled waves, boss warning flow.*
+**Commit:** `ecbdd61` — *Phase 4: Level manager, scaled waves, boss warning flow.*
 
 **Built:**
 - `LevelManager` — intro → combat → boss warning → level complete → next level
@@ -205,6 +205,7 @@ input → turret → firing → entities.update → flying drops
 | `e942076` | 2026-06-12 | Project memory module + AGENTS.md |
 | `2e6a144` | 2026-06-12 | Memory doc git log update |
 | `e654341` | 2026-06-12 | Phase 3 — ground threats, breach, game over |
+| `ecbdd61` | 2026-06-12 | Phase 4 — level manager, scaled waves, boss warning |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
