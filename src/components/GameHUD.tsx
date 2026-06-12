@@ -17,19 +17,37 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
     : 0;
   const reloadPct = snapshot.reloading ? snapshot.reloadProgress * 100 : 0;
   const healthLow = healthPct <= 30;
+  const healthCritical = healthPct <= 15;
   const breachHigh = snapshot.breachDanger;
+  const comboHigh = snapshot.combo >= 3;
   const bossPct =
     snapshot.bossMaxHealth > 0
       ? (snapshot.bossHealth / snapshot.bossMaxHealth) * 100
       : 0;
 
+  const hudClass = [
+    'hud',
+    healthLow ? 'hud--low-health' : '',
+    healthCritical ? 'hud--health-critical' : '',
+    breachHigh ? 'hud--breach-danger' : '',
+    snapshot.bombWarning && !snapshot.isBossFight ? 'hud--bomb-warning' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="hud" aria-live="polite">
+    <div className={hudClass} aria-live="polite">
+      {healthLow && <div className="hud__vignette hud__vignette--health" aria-hidden />}
+      {breachHigh && <div className="hud__vignette hud__vignette--breach" aria-hidden />}
+
       {snapshot.isBossFight && (
         <div className="hud__boss-bar" role="meter" aria-label="Boss health">
           <div className="hud__boss-header">
             <span className="hud__boss-name">{snapshot.bossName}</span>
-            <span className="hud__boss-phase">
+            <span
+              key={snapshot.bossPhase}
+              className={`hud__boss-phase ${snapshot.bossShieldActive ? 'hud__boss-phase--shielded' : ''}`}
+            >
               PHASE {snapshot.bossPhase}
               {snapshot.bossShieldActive && ' · SHIELDED'}
             </span>
@@ -48,21 +66,23 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
 
       {snapshot.bombWarning && !snapshot.isBossFight && (
         <div className="hud__alert hud__alert--bomb" role="alert">
+          <span className="hud__alert-icon" aria-hidden>⚠</span>
           INCOMING BOMB — SHOOT IT DOWN!
         </div>
       )}
       {breachHigh && (
         <div className="hud__alert hud__alert--breach" role="alert">
+          <span className="hud__alert-icon" aria-hidden>!</span>
           BREACH CRITICAL — STOP GROUND THREATS!
         </div>
       )}
 
       <div className="hud__top">
-        <div className="hud__stat">
+        <div className="hud__stat hud__stat--score">
           <span className="hud__label">SCORE</span>
           <span className="hud__value">{snapshot.score.toLocaleString()}</span>
         </div>
-        <div className="hud__stat">
+        <div className="hud__stat hud__stat--credits">
           <span className="hud__label">CREDITS</span>
           <span className="hud__value hud__value--credits">
             {snapshot.credits.toLocaleString()}
@@ -85,7 +105,9 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
           </span>
         </div>
         {snapshot.combo > 1 && (
-          <div className="hud__stat hud__stat--combo">
+          <div
+            className={`hud__stat hud__stat--combo ${comboHigh ? 'hud__stat--combo-high' : ''}`}
+          >
             <span className="hud__label">COMBO</span>
             <span className="hud__value hud__value--combo">×{snapshot.combo}</span>
           </div>
@@ -93,23 +115,27 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
       </div>
 
       <div className="hud__bottom">
-        <div className={`hud__bar-group ${healthLow ? 'hud__bar-group--danger' : ''}`}>
+        <div
+          className={`hud__bar-group ${healthLow ? 'hud__bar-group--danger hud__bar-group--health-low' : ''}`}
+        >
           <span className="hud__label">BASE HEALTH</span>
           <span className="hud__bar-value">{Math.ceil(snapshot.baseHealth)}</span>
           <div className="hud__bar">
             <div
-              className="hud__bar-fill hud__bar-fill--health"
+              className={`hud__bar-fill hud__bar-fill--health ${healthLow ? 'hud__bar-fill--pulse' : ''}`}
               style={{ width: `${healthPct}%` }}
             />
           </div>
         </div>
 
-        <div className={`hud__bar-group ${breachHigh ? 'hud__bar-group--danger' : ''}`}>
+        <div
+          className={`hud__bar-group ${breachHigh ? 'hud__bar-group--danger hud__bar-group--breach-high' : ''}`}
+        >
           <span className="hud__label">BREACH</span>
           <span className="hud__bar-value">{Math.ceil(snapshot.breach)}%</span>
           <div className="hud__bar">
             <div
-              className="hud__bar-fill hud__bar-fill--breach"
+              className={`hud__bar-fill hud__bar-fill--breach ${breachHigh ? 'hud__bar-fill--pulse' : ''}`}
               style={{ width: `${breachPct}%` }}
             />
           </div>

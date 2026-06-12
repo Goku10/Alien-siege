@@ -65,8 +65,9 @@ export class BossManager {
     if (boss.phase !== this.lastPhase) {
       this.lastPhase = boss.phase;
       this.callbacks.onPhaseChange?.(boss.phase);
-      effects.spawnScorePopup(boss.x, boss.y + 40, `PHASE ${boss.phase}`);
-      this.callbacks.onScreenShake?.(6);
+      effects.spawnScreenFlash('#ff4466', 0.32);
+      effects.spawnScorePopup(boss.x, boss.y + 40, `PHASE ${boss.phase}`, 'phase');
+      this.callbacks.onScreenShake?.(7);
     }
 
     if (boss.shieldActive) {
@@ -91,7 +92,7 @@ export class BossManager {
       effects.spawnExplosion(boss.x + 40, boss.y, 50, '#00e5c0');
       this.callbacks.onScreenShake?.(MOTHERSHIP_BOSS.shakeOnDefeat);
       const bonus = Math.floor(MOTHERSHIP_BOSS.defeatScore * (1 + boss.levelId * 0.15));
-      effects.spawnScorePopup(boss.x, boss.y, `BOSS DEFEATED +${bonus}`);
+      effects.spawnScorePopup(boss.x, boss.y, `BOSS DEFEATED +${bonus}`, 'announce');
       this.callbacks.onDefeated?.(bonus);
     }
   }
@@ -146,7 +147,7 @@ export class BossManager {
       case 'shield':
         boss.shieldActive = true;
         boss.shieldTimer = phaseCfg.shieldDuration;
-        effects.spawnScorePopup(boss.x, boss.y - 30, 'SHIELDS UP');
+        effects.spawnScorePopup(boss.x, boss.y - 30, 'SHIELDS UP', 'announce');
         break;
       default:
         break;

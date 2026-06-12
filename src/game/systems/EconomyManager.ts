@@ -10,6 +10,8 @@ import type { LevelSummary } from '../types';
 export interface KillReward {
   score: number;
   credits: number;
+  combo: number;
+  comboIncreased: boolean;
 }
 
 export interface WaveReward {
@@ -91,6 +93,7 @@ export class EconomyManager {
   }
 
   registerKill(baseScore: number, creditReward: number): KillReward {
+    const prevCombo = this.combo;
     this.killStreak += 1;
     this.comboTimer = BALANCING.combo.decayTime + this.comboDecayBonus;
 
@@ -106,14 +109,19 @@ export class EconomyManager {
     this.levelKills += 1;
     this.levelKillCredits += credits;
 
-    return { score, credits };
+    return {
+      score,
+      credits,
+      combo: this.combo,
+      comboIncreased: this.combo > prevCombo,
+    };
   }
 
   awardBossDefeat(scoreBonus: number, levelId: number): KillReward {
     const credits = this.grantCredits(getBossDefeatCredits(levelId));
     this.score += scoreBonus;
     this.levelBossCredits += credits;
-    return { score: scoreBonus, credits };
+    return { score: scoreBonus, credits, combo: this.combo, comboIncreased: false };
   }
 
   awardWaveClear(clearBonus: number): WaveReward {

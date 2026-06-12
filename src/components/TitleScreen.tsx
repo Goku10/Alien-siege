@@ -12,7 +12,7 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
           <span className="title-panel__subtitle">Turret Defense</span>
         </h1>
         <p className="title-panel__tagline">
-          Hold the line. Destroy the invasion. Upgrade between waves.
+          Hold the line. Destroy the invasion. Upgrade between levels.
         </p>
 
         <button type="button" className="btn btn--primary" onClick={onStart}>
@@ -21,23 +21,42 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
 
         <section className="how-to-play" aria-labelledby="how-to-play-heading">
           <h2 id="how-to-play-heading">How to Play</h2>
-          <ul>
-            <li>
-              <strong>Aim</strong> with the mouse (or <kbd>A</kbd>/<kbd>D</kbd> keys)
-            </li>
-            <li>
-              <strong>Fire</strong> with left click or <kbd>Space</kbd>
-            </li>
-            <li>
-              <strong>Secondary</strong> with right click or <kbd>Shift</kbd> (coming soon)
-            </li>
-            <li>
-              <strong>Pause</strong> with <kbd>Esc</kbd>
-            </li>
-          </ul>
+          <div className="how-to-play__grid">
+            <div className="how-to-play__block">
+              <h3>Controls</h3>
+              <ul>
+                <li>
+                  <strong>Aim</strong> — mouse or <kbd>A</kbd>/<kbd>D</kbd>
+                </li>
+                <li>
+                  <strong>Fire</strong> — left click or <kbd>Space</kbd>
+                </li>
+                <li>
+                  <strong>Pause</strong> — <kbd>Esc</kbd>
+                </li>
+              </ul>
+            </div>
+            <div className="how-to-play__block">
+              <h3>Objectives</h3>
+              <ul>
+                <li>Destroy flying aliens and clear each wave</li>
+                <li>Shoot bombs and drop pods before they land</li>
+                <li>Stop ground units from filling the breach meter</li>
+                <li>Defeat the mothership boss at the end of each level</li>
+              </ul>
+            </div>
+            <div className="how-to-play__block">
+              <h3>Progression</h3>
+              <ul>
+                <li>Chain kills to build combo multipliers</li>
+                <li>Earn credits from kills, wave clears, and bosses</li>
+                <li>Buy weapons and upgrades in the between-level shop</li>
+              </ul>
+            </div>
+          </div>
           <p className="how-to-play__goal">
-            Destroy ships, shoot down bombs and pods, and kill ground aliens before
-            they breach the base or bombs destroy your shields.
+            Lose if breach reaches 100% or base health hits zero. Survive all three
+            levels to complete the campaign.
           </p>
         </section>
       </div>

@@ -66,6 +66,15 @@ export function ShopScreen({ snapshot, onContinue, onBuy, onEquip }: ShopScreenP
           </div>
         </div>
 
+        {snapshot.shopToast && (
+          <div
+            className={`shop-toast shop-toast--${snapshot.shopToast.variant}`}
+            role="status"
+          >
+            {snapshot.shopToast.message}
+          </div>
+        )}
+
         <div className="shop__sections">
           {CATEGORY_ORDER.map((category) => {
             const items = grouped[category];

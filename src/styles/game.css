@@ -49,13 +49,13 @@
 }
 
 .overlay--pause {
-  background: rgba(6, 8, 15, 0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(6, 8, 15, 0.55);
+  backdrop-filter: blur(8px);
 }
 
 .overlay--game-over {
-  background: rgba(20, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: radial-gradient(ellipse at center, rgba(40, 0, 0, 0.85) 0%, rgba(10, 0, 0, 0.92) 70%);
+  backdrop-filter: blur(10px);
 }
 
 .overlay--level-intro {
@@ -419,6 +419,16 @@
   font-size: 0.65rem;
   letter-spacing: 0.1em;
   color: var(--color-warning);
+  animation: boss-phase-pop 0.5s ease-out;
+}
+
+.hud__boss-phase--shielded {
+  color: #64b5f6;
+}
+
+@keyframes boss-phase-pop {
+  0% { transform: scale(1.3); color: #fff; }
+  100% { transform: scale(1); }
 }
 
 .hud__boss-track {
@@ -501,12 +511,27 @@
   margin-bottom: 0.75rem;
 }
 
+.how-to-play__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.how-to-play__block h3 {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-bottom: 0.5rem;
+}
+
 .how-to-play ul {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  font-size: 1rem;
+  font-size: 0.92rem;
 }
 
 .how-to-play__goal {
@@ -578,7 +603,46 @@
 }
 
 .panel--game-over {
-  max-width: 440px;
+  max-width: 520px;
+  animation: panel-rise-in 0.35s ease-out;
+}
+
+.panel--pause {
+  animation: panel-rise-in 0.25s ease-out;
+  max-width: 400px;
+}
+
+.panel__eyebrow--muted {
+  color: var(--color-text-dim);
+}
+
+.panel__reason--compact {
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.pause-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.35) 100%);
+  pointer-events: none;
+}
+
+.pause-hints {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.panel__hint--dim {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+@keyframes panel-rise-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .panel__eyebrow {
@@ -597,10 +661,18 @@
 }
 
 .game-over__stats {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.5rem;
   margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 68, 102, 0.25);
+  border-radius: 6px;
+}
+
+.game-over__stat--primary {
+  grid-column: 1 / -1;
 }
 
 .game-over__stat {
@@ -617,8 +689,12 @@
 
 .game-over__value {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
+}
+
+.game-over__value--credits {
+  color: var(--color-credits, #7dd3fc);
 }
 
 .level-summary {
@@ -710,11 +786,12 @@
 }
 
 .hud__stat {
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  padding: 5px 12px;
   min-width: 80px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .hud__label {
@@ -736,8 +813,18 @@
 }
 
 .hud__stat--combo {
-  border-color: rgba(255, 170, 0, 0.6);
+  border-color: rgba(255, 170, 0, 0.55);
   animation: combo-pulse 0.6s ease-in-out infinite alternate;
+}
+
+.hud__stat--combo-high {
+  border-color: rgba(255, 186, 8, 0.85);
+  animation: combo-pulse-high 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes combo-pulse-high {
+  from { box-shadow: 0 0 10px rgba(255, 186, 8, 0.35); transform: scale(1); }
+  to { box-shadow: 0 0 22px rgba(255, 186, 8, 0.65); transform: scale(1.03); }
 }
 
 .hud__value--combo {
@@ -758,10 +845,19 @@
   font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.12em;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 0.55rem 1.1rem;
+  border-radius: 5px;
   pointer-events: none;
-  animation: alert-pulse 0.8s ease-in-out infinite alternate;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: alert-pulse 0.7s ease-in-out infinite alternate;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.hud__alert-icon {
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .hud__alert--bomb {
@@ -778,8 +874,8 @@
 }
 
 @keyframes alert-pulse {
-  from { opacity: 0.85; }
-  to { opacity: 1; }
+  from { opacity: 0.88; transform: translate(-50%, -50%) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
 }
 
 .hud__bar-group {
@@ -794,7 +890,33 @@
 
 .hud__bar-group--danger {
   border-color: rgba(255, 68, 102, 0.7);
-  animation: combo-pulse 0.5s ease-in-out infinite alternate;
+}
+
+.hud__bar-group--health-low {
+  animation: health-danger-pulse 0.9s ease-in-out infinite alternate;
+}
+
+.hud__bar-group--breach-high {
+  animation: breach-danger-pulse 0.7s ease-in-out infinite alternate;
+}
+
+.hud__bar-fill--pulse {
+  animation: bar-fill-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes health-danger-pulse {
+  from { box-shadow: 0 0 6px rgba(255, 68, 68, 0.2); border-color: rgba(255, 68, 102, 0.5); }
+  to { box-shadow: 0 0 16px rgba(255, 68, 68, 0.45); border-color: rgba(255, 68, 102, 0.85); }
+}
+
+@keyframes breach-danger-pulse {
+  from { box-shadow: 0 0 6px rgba(255, 100, 50, 0.2); }
+  to { box-shadow: 0 0 18px rgba(255, 68, 68, 0.5); }
+}
+
+@keyframes bar-fill-pulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.25); }
 }
 
 .hud__bar-value {
@@ -892,6 +1014,65 @@
   pointer-events: none;
 }
 
+/* Phase 11 — HUD vignettes & shop toast */
+.hud__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hud__vignette--health {
+  background: radial-gradient(ellipse at bottom, rgba(255, 68, 68, 0.12) 0%, transparent 55%);
+  animation: vignette-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.hud__vignette--breach {
+  background: radial-gradient(ellipse at bottom center, rgba(255, 68, 68, 0.15) 0%, transparent 50%);
+  animation: vignette-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.hud--health-critical .hud__vignette--health {
+  background: radial-gradient(ellipse at bottom, rgba(255, 68, 68, 0.22) 0%, transparent 50%);
+}
+
+@keyframes vignette-pulse {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+.hud > *:not(.hud__vignette) {
+  position: relative;
+  z-index: 1;
+}
+
+.shop-toast {
+  margin-bottom: 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: 5px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  animation: shop-toast-in 0.3s ease-out;
+}
+
+.shop-toast--purchase {
+  background: rgba(0, 201, 167, 0.15);
+  border: 1px solid rgba(0, 229, 192, 0.45);
+  color: var(--color-accent);
+}
+
+.shop-toast--equip {
+  background: rgba(125, 211, 252, 0.12);
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  color: var(--color-credits, #7dd3fc);
+}
+
+@keyframes shop-toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 768px) {
   .hud__top {
     gap: 0.5rem;
@@ -913,5 +1094,13 @@
   .how-to-play {
     padding: 1rem;
     font-size: 0.9rem;
+  }
+
+  .how-to-play__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-over__stats {
+    grid-template-columns: 1fr;
   }
 }

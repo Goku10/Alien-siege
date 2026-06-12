@@ -63,8 +63,10 @@ export const BALANCING = {
 
   /** Screen shake */
   effects: {
-    shakeDecay: 8,
-    maxShake: 12,
+    shakeDecay: 9,
+    maxShake: 14,
+    heavyHitHealthThreshold: 48,
+    heavyHitShake: 1.8,
   },
 
   /** Falling threats */

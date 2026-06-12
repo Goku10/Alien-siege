@@ -62,7 +62,7 @@ export function GameCanvas() {
         />
       )}
       {screen === 'playing' && (
-        <div className="prototype-badge">Phase 10 — Enemy Variety</div>
+        <div className="prototype-badge">Phase 11 — Polish</div>
       )}
     </div>
   );

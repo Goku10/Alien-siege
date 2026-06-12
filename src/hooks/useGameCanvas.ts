@@ -47,6 +47,7 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   bossName: 'Alien Mothership',
   showShop: false,
   shopItems: [],
+  shopToast: null,
 };
 
 export function useGameCanvas() {

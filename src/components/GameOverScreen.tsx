@@ -12,6 +12,8 @@ export function GameOverScreen({ snapshot, onRestart, onTitle }: GameOverScreenP
       ? 'The perimeter was breached — alien forces overran the base.'
       : 'Base shields collapsed — the installation is lost.';
 
+  const finalScore = snapshot.finalScore || snapshot.score;
+
   return (
     <div className="overlay overlay--game-over">
       <div className="panel panel--game-over">
@@ -20,15 +22,25 @@ export function GameOverScreen({ snapshot, onRestart, onTitle }: GameOverScreenP
         <p className="panel__reason">{reason}</p>
 
         <div className="game-over__stats">
-          <div className="game-over__stat">
+          <div className="game-over__stat game-over__stat--primary">
             <span className="hud__label">FINAL SCORE</span>
-            <span className="game-over__score">
-              {(snapshot.finalScore || snapshot.score).toLocaleString()}
+            <span className="game-over__score">{finalScore.toLocaleString()}</span>
+          </div>
+          <div className="game-over__stat">
+            <span className="hud__label">LEVEL REACHED</span>
+            <span className="game-over__value">
+              {snapshot.levelName || `Level ${snapshot.level}`}
             </span>
           </div>
           <div className="game-over__stat">
-            <span className="hud__label">WAVES SURVIVED</span>
+            <span className="hud__label">WAVES CLEARED</span>
             <span className="game-over__value">{snapshot.wave || 0}</span>
+          </div>
+          <div className="game-over__stat">
+            <span className="hud__label">CREDITS EARNED</span>
+            <span className="game-over__value game-over__value--credits">
+              {snapshot.credits.toLocaleString()}
+            </span>
           </div>
         </div>
 

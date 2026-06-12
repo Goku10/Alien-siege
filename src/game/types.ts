@@ -247,10 +247,20 @@ export interface Explosion {
   active: boolean;
 }
 
+export type ScorePopupVariant = 'score' | 'credits' | 'combo' | 'phase' | 'announce';
+
 export interface ScorePopup {
   x: number;
   y: number;
   text: string;
+  life: number;
+  maxLife: number;
+  variant: ScorePopupVariant;
+  active: boolean;
+}
+
+export interface ScreenFlash {
+  color: string;
   life: number;
   maxLife: number;
   active: boolean;
@@ -262,7 +272,15 @@ export interface MuzzleFlash {
   angle: number;
   life: number;
   maxLife: number;
+  color: string;
+  glowColor: string;
+  size: number;
   active: boolean;
+}
+
+export interface ShopToast {
+  message: string;
+  variant: 'purchase' | 'equip';
 }
 
 export type ShopItemState =
@@ -360,4 +378,5 @@ export interface GameSnapshot {
   bossName: string;
   showShop: boolean;
   shopItems: ShopItemView[];
+  shopToast: ShopToast | null;
 }

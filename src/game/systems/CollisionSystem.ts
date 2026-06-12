@@ -1,3 +1,4 @@
+import { BALANCING } from '../data/balancing';
 import { MOTHERSHIP_BOSS } from '../data/bossConfig';
 import { getKillCredits } from '../data/credits';
 import { ENEMY_DEFINITIONS } from '../data/enemies';
@@ -32,6 +33,15 @@ function splashDamageAt(distance: number, radius: number, baseDamage: number): n
   if (radius <= 0) return 0;
   const t = Math.min(1, distance / radius);
   return Math.max(1, Math.floor(baseDamage * (1 - t * 0.55)));
+}
+
+function maybeHeavyHitShake(
+  maxHealth: number,
+  callbacks: CollisionCallbacks,
+): void {
+  if (maxHealth >= BALANCING.effects.heavyHitHealthThreshold) {
+    callbacks.onScreenShake?.(BALANCING.effects.heavyHitShake);
+  }
 }
 
 export class CollisionSystem {
@@ -169,18 +179,29 @@ export class CollisionSystem {
       if (!circleHit(proj.x, proj.y, proj.radius, enemy.x, enemy.y, enemy.radius)) continue;
 
       damageEnemy(enemy, proj.damage);
-      effects.spawnHitSparks(proj.x, proj.y, enemy.typeId);
+      const def = ENEMY_DEFINITIONS[enemy.typeId];
+      const heavy = enemy.maxHealth >= BALANCING.effects.heavyHitHealthThreshold;
+      effects.spawnHitSparks(proj.x, proj.y, enemy.typeId, heavy);
       callbacks.onHit?.();
+      if (enemy.health > 0) maybeHeavyHitShake(enemy.maxHealth, callbacks);
       this.maybeSplash(proj, enemy.x, enemy.y, enemy.id, entities, economy, effects, callbacks);
 
       if (enemy.health <= 0) {
-        const def = ENEMY_DEFINITIONS[enemy.typeId];
         const reward = economy.registerKill(
           enemy.scoreValue,
           getKillCredits(enemy.typeId),
         );
-        effects.spawnExplosion(enemy.x, enemy.y, enemy.radius, def.accentColor);
-        effects.spawnScorePopup(enemy.x, enemy.y - 20, `+${reward.score}`);
+        effects.spawnKillFeedback(
+          enemy.x,
+          enemy.y,
+          reward.score,
+          reward.credits,
+          reward.combo,
+          reward.comboIncreased,
+          def.accentColor,
+          enemy.radius,
+          heavy,
+        );
         callbacks.onScreenShake?.(def.shakeOnDeath);
       }
       return true;
@@ -200,19 +221,30 @@ export class CollisionSystem {
       if (!circleHit(proj.x, proj.y, proj.radius, g.x, g.y, g.radius)) continue;
 
       damageGroundEnemy(g, proj.damage);
+      const gDef = GROUND_ENEMY_DEFINITIONS[g.typeId];
+      const gHeavy = g.maxHealth >= BALANCING.effects.heavyHitHealthThreshold;
       effects.spawnGroundHitSparks(proj.x, proj.y, g.typeId);
       callbacks.onHit?.();
+      if (g.health > 0) maybeHeavyHitShake(g.maxHealth, callbacks);
       this.maybeSplash(proj, g.x, g.y, g.id, entities, economy, effects, callbacks);
 
       if (g.health <= 0) {
-        const def = GROUND_ENEMY_DEFINITIONS[g.typeId];
         const reward = economy.registerKill(
           g.scoreValue,
           getKillCredits(g.typeId),
         );
-        effects.spawnExplosion(g.x, g.y, g.radius, def.accentColor);
-        effects.spawnScorePopup(g.x, g.y - 16, `+${reward.score}`);
-        callbacks.onScreenShake?.(def.shakeOnDeath);
+        effects.spawnKillFeedback(
+          g.x,
+          g.y,
+          reward.score,
+          reward.credits,
+          reward.combo,
+          reward.comboIncreased,
+          gDef.accentColor,
+          g.radius,
+          gHeavy,
+        );
+        callbacks.onScreenShake?.(gDef.shakeOnDeath);
         g.active = false;
       }
       return true;
@@ -241,8 +273,17 @@ export class CollisionSystem {
           b.scoreValue,
           getKillCredits('bomb'),
         );
-        effects.spawnExplosion(b.x, b.y, b.radius * 1.5, '#ffaa00');
-        effects.spawnScorePopup(b.x, b.y - 12, `+${reward.score}`);
+        effects.spawnKillFeedback(
+          b.x,
+          b.y,
+          reward.score,
+          reward.credits,
+          reward.combo,
+          reward.comboIncreased,
+          '#ffaa00',
+          b.radius * 1.5,
+          false,
+        );
         entities.releaseBomb(b);
         callbacks.onScreenShake?.(3);
       }
@@ -272,8 +313,17 @@ export class CollisionSystem {
           p.scoreValue,
           getKillCredits('pod'),
         );
-        effects.spawnExplosion(p.x, p.y, p.radius, '#52b788');
-        effects.spawnScorePopup(p.x, p.y - 12, `+${reward.score}`);
+        effects.spawnKillFeedback(
+          p.x,
+          p.y,
+          reward.score,
+          reward.credits,
+          reward.combo,
+          reward.comboIncreased,
+          '#52b788',
+          p.radius,
+          false,
+        );
         entities.releaseDropPod(p);
         callbacks.onScreenShake?.(2);
       }
@@ -346,8 +396,19 @@ export class CollisionSystem {
       callbacks.onHit?.();
       if (enemy.health <= 0) {
         const def = ENEMY_DEFINITIONS[enemy.typeId];
-        economy.registerKill(enemy.scoreValue, getKillCredits(enemy.typeId));
-        effects.spawnExplosion(enemy.x, enemy.y, enemy.radius, def.accentColor);
+        const reward = economy.registerKill(enemy.scoreValue, getKillCredits(enemy.typeId));
+        effects.spawnKillFeedback(
+          enemy.x,
+          enemy.y,
+          reward.score,
+          reward.credits,
+          reward.combo,
+          reward.comboIncreased,
+          def.accentColor,
+          enemy.radius,
+          enemy.maxHealth >= BALANCING.effects.heavyHitHealthThreshold,
+        );
+        callbacks.onScreenShake?.(def.shakeOnDeath * 0.6);
       }
     }
 
@@ -358,8 +419,20 @@ export class CollisionSystem {
       damageGroundEnemy(g, splashDamageAt(dist, radius, baseDamage));
       callbacks.onHit?.();
       if (g.health <= 0) {
+        const gDef = GROUND_ENEMY_DEFINITIONS[g.typeId];
+        const reward = economy.registerKill(g.scoreValue, getKillCredits(g.typeId));
+        effects.spawnKillFeedback(
+          g.x,
+          g.y,
+          reward.score,
+          reward.credits,
+          reward.combo,
+          reward.comboIncreased,
+          gDef.accentColor,
+          g.radius,
+          false,
+        );
         g.active = false;
-        economy.registerKill(g.scoreValue, getKillCredits(g.typeId));
       }
     }
 

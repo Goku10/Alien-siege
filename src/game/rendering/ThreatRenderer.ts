@@ -4,38 +4,51 @@ import type { EffectsManager } from '../systems/EffectsManager';
 import { getBaseLayout } from '../utils/baseLayout';
 
 export class ThreatRenderer {
-  drawBombs(ctx: CanvasRenderingContext2D, bombs: BombState[], canvasH: number): void {
+  drawBombs(
+    ctx: CanvasRenderingContext2D,
+    bombs: BombState[],
+    canvasH: number,
+    effects: EffectsManager,
+  ): void {
     const layout = getBaseLayout(BALANCING.canvas.width, canvasH);
+    const pulse = effects.getPulse(2.4);
+
     for (const b of bombs) {
       if (!b.active) continue;
       const flash = b.flashTimer > 0;
-      const nearGround = b.y > layout.groundY - 160;
-      const pulse = nearGround ? 0.5 + 0.5 * Math.sin(Date.now() * 0.012) : 1;
+      const nearGround = b.y > layout.groundY - 150;
+      const localPulse = nearGround ? pulse : 1;
 
       if (nearGround) {
-        ctx.strokeStyle = `rgba(255, 68, 68, ${0.35 * pulse})`;
+        ctx.strokeStyle = `rgba(255, 68, 68, ${0.25 + 0.35 * localPulse})`;
         ctx.lineWidth = 2;
-        ctx.setLineDash([4, 6]);
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(b.x, b.y);
         ctx.lineTo(b.x, layout.groundY);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.strokeStyle = `rgba(255, 68, 68, ${0.5 * pulse})`;
-        ctx.lineWidth = 2;
+        const ringR = 16 + localPulse * 10;
+        ctx.strokeStyle = `rgba(255, 100, 50, ${0.35 + 0.45 * localPulse})`;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(b.x, layout.groundY, 18 + pulse * 6, 0, Math.PI * 2);
+        ctx.arc(b.x, layout.groundY, ringR, 0, Math.PI * 2);
         ctx.stroke();
+
+        ctx.fillStyle = `rgba(255, 68, 68, ${0.08 * localPulse})`;
+        ctx.beginPath();
+        ctx.arc(b.x, layout.groundY, ringR + 6, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius * 2.5);
+      const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius * 2.8);
       grad.addColorStop(0, flash ? '#fff' : '#ffdd00');
-      grad.addColorStop(0.5, '#ff6b35');
+      grad.addColorStop(0.45, '#ff6b35');
       grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.arc(b.x, b.y, b.radius * 2.5, 0, Math.PI * 2);
+      ctx.arc(b.x, b.y, b.radius * 2.8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = flash ? '#fff' : '#ff2200';
@@ -74,15 +87,15 @@ export class ThreatRenderer {
     breachDanger: boolean,
   ): void {
     const layout = getBaseLayout(w, h);
+    const pulse = effects.getPulse(1.6);
 
     if (breachDanger) {
-      const pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.008);
-      ctx.fillStyle = `rgba(255, 68, 68, ${0.08 * pulse})`;
+      ctx.fillStyle = `rgba(255, 68, 68, ${0.06 + 0.1 * pulse})`;
       ctx.fillRect(0, 0, w, h);
 
-      ctx.strokeStyle = `rgba(255, 68, 68, ${0.4 * pulse})`;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 8]);
+      ctx.strokeStyle = `rgba(255, 68, 102, ${0.35 + 0.45 * pulse})`;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([10, 6]);
       ctx.strokeRect(
         layout.centerX - layout.breachHalfWidth * 0.55,
         layout.baseY,
@@ -95,21 +108,33 @@ export class ThreatRenderer {
     for (const d of effects.dropIndicators) {
       const t = d.life / d.maxLife;
       const alpha = t;
+      const ring = 10 + (1 - t) * 14;
       ctx.strokeStyle = d.kind === 'bomb'
-        ? `rgba(255, 100, 50, ${alpha})`
-        : `rgba(82, 183, 136, ${alpha})`;
+        ? `rgba(255, 120, 50, ${alpha * 0.9})`
+        : `rgba(82, 183, 136, ${alpha * 0.9})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(d.x, d.y, 12 + (1 - t) * 8, 0, Math.PI * 2);
+      ctx.arc(d.x, d.y, ring, 0, Math.PI * 2);
       ctx.stroke();
+      if (d.kind === 'bomb') {
+        ctx.fillStyle = `rgba(255, 100, 50, ${alpha * 0.15})`;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, ring * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     for (const m of effects.impactMarkers) {
       const t = m.life / m.maxLife;
-      ctx.strokeStyle = `rgba(255, 100, 0, ${t})`;
+      ctx.strokeStyle = `rgba(255, 140, 40, ${t * 0.85})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(m.x, m.y, 24 * (1 - t) + 8, 0, Math.PI * 2);
+      ctx.arc(m.x, m.y, 20 * (1 - t) + 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 220, 100, ${t * 0.5})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 28 * (1 - t) + 14, 0, Math.PI * 2);
       ctx.stroke();
     }
   }

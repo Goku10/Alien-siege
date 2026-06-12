@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 10 complete  
+**Current phase:** Phase 11 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -48,7 +48,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 8 | Multi-weapon arsenal (5 weapon types) | ✅ Done |
 | 9 | Tiered upgrade system (weapon/defense/special) | ✅ Done |
 | 10 | Enemy variety, wave composition, level scaling | ✅ Done |
-| 11 | Polish — particles, audio hooks, balance pass | ⏳ Next |
+| 11 | Polish — HUD, VFX feedback, screen UX | ✅ Done |
+| 12 | Audio, save/load, or expansion | ⏳ Next |
 
 ---
 
@@ -227,7 +228,22 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 10)
+### Phase 11 — Presentation polish
+**Commit:** *(pending)* — *Phase 11: HUD polish, VFX feedback, and screen UX.*
+
+**Built:**
+- HUD readability: vignettes for low health / breach danger, pulsing danger bars, combo tier highlight
+- Kill feedback: score + credits + combo popups, color-coded variants, larger explosions on heavy kills
+- Heavy-hit screen shake on high-HP enemies; boss phase screen flash + shake
+- Weapon-colored muzzle flashes; tapered projectile trails; improved bomb/breach warning pulses (game-time synced)
+- Pause overlay polish; expanded game-over stats; shop purchase/equip toast
+- Title screen how-to-play: controls, objectives, progression (3-column grid)
+
+**Intentionally deferred:** audio implementation, save/load.
+
+---
+
+## Current state (after Phase 11)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
@@ -316,16 +332,20 @@ input → turret → firing → entities.update → flying drops
 | `f320e2b` | 2026-06-12 | Phase 8 — multi-weapon arsenal |
 | `c1217ed` | 2026-06-12 | Phase 9 — tiered upgrade system |
 | `dc9a092` | 2026-06-12 | Phase 10 — enemy variety, wave composition, scaling |
+| `a0b277c` | 2026-06-12 | Project memory update for Phase 10 |
+| *(pending)* | 2026-06-12 | Phase 11 — presentation polish |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
 ---
 
-## Phase 11 preview (next work)
+## Phase 12 preview (next work)
 
-- [ ] Polish pass — particles, audio hooks, balance tuning
+- [ ] Audio hooks wired to a sound library
+- [ ] Save/load or campaign expansion
+- [ ] Balance pass on wave compositions and shop economy
 
-**Config:** `waveCompositions.ts` + `levelScaling.ts` for enemy mix/difficulty; `shopItems.ts` for economy.
+**Config:** `balancing.ts` effects section for shake/VFX tuning; `game.css` for HUD styling.
 
 ---
 

@@ -72,17 +72,17 @@ src/
 | `src/game/data/upgradeEffects.ts` | Upgrade effect field definitions |
 | `src/game/data/weapons.ts` | Weapon definitions for shop loadout |
 
-## Current Status — Phase 10 Complete
+## Current Status — Phase 11 Complete
 
-- [x] Phases 1–9: Campaign, shop, credits, five weapons, tiered upgrades
-- [x] **6 flying enemy types** — scouts, carriers, bombers, shielded transports, swarm pods, elite bio-pods
-- [x] **4 ground enemy types** — crawler, spitter, leaper, brood guard
-- [x] Data-driven wave blueprints with distinct compositions per level
-- [x] Level scaling for speed, health, drop aggression, and ground unit stats
+- [x] Phases 1–10: Full campaign loop, shop, credits, weapons, enemy variety
+- [x] **HUD polish** — danger vignettes, pulsing health/breach bars, combo highlight
+- [x] **Combat feedback** — kill/credits/combo popups, heavy-hit shake, boss phase flash
+- [x] **VFX** — weapon-colored muzzle flashes, tapered trails, improved warnings
+- [x] **Screen UX** — pause/game-over polish, shop toasts, expanded how-to-play
 
 ### Next Phases
 
-- Phase 11: Polish (particles, audio hooks, balance pass)
+- Phase 12: Audio, persistence, or expansion content
 
 ## License
 

@@ -88,7 +88,7 @@ export class ThreatSystem {
         entities.releaseBomb(b);
         return false;
       }
-      if (b.y > layout.groundY - 140) this.bombWarningActive = true;
+      if (b.y > layout.groundY - 150) this.bombWarningActive = true;
       return state === 'falling';
     });
 

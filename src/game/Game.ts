@@ -1,6 +1,6 @@
 import { BALANCING } from './data/balancing';
 import { MOTHERSHIP_BOSS } from './data/bossConfig';
-import type { ShopItemId } from './data/shopItems';
+import { SHOP_ITEM_MAP, type ShopItemId } from './data/shopItems';
 import { Turret } from './entities/Turret';
 import { Renderer } from './rendering/Renderer';
 import { BaseDefenseSystem } from './systems/BaseDefenseSystem';
@@ -15,7 +15,7 @@ import { LevelManager } from './systems/LevelManager';
 import { ShopManager } from './systems/ShopManager';
 import { ThreatSystem } from './systems/ThreatSystem';
 import { WaveManager } from './systems/WaveManager';
-import type { GameOverReason, GameScreen, GameSnapshot } from './types';
+import type { GameOverReason, GameScreen, GameSnapshot, ShopToast } from './types';
 
 export interface GameCallbacks {
   onScreenChange?: (screen: GameScreen) => void;
@@ -50,6 +50,8 @@ export class Game {
   private finalScore = 0;
   private levelCompleteBonus = 0;
   private campaignComplete = false;
+  private shopToast: ShopToast | null = null;
+  private shopToastTimer = 0;
 
   constructor(canvas: HTMLCanvasElement, callbacks: GameCallbacks = {}) {
     const ctx = canvas.getContext('2d');
@@ -80,17 +82,17 @@ export class Game {
           width / 2,
           height * 0.38,
           `BOSS DOWN +${reward.score}`,
+          'announce',
         );
         this.effects.spawnScorePopup(
           width / 2,
           height * 0.44,
           `+${reward.credits} CREDITS`,
+          'credits',
         );
         this.levels.onBossDefeated();
       },
-      onPhaseChange: () => {
-        this.addScreenShake(5);
-      },
+      onPhaseChange: () => {},
       onScreenShake: (amount) => this.addScreenShake(amount),
     });
 
@@ -103,6 +105,7 @@ export class Game {
           width / 2,
           height * 0.28,
           `WAVE ${waveNum} / ${totalWaves}`,
+          'announce',
         );
       },
       onWaveComplete: (_waveNum, clearBonus) => {
@@ -111,11 +114,13 @@ export class Game {
           width / 2,
           height * 0.35,
           `WAVE CLEAR +${reward.score}`,
+          'score',
         );
         this.effects.spawnScorePopup(
           width / 2,
           height * 0.41,
           `+${reward.credits} CREDITS`,
+          'credits',
         );
         this.addScreenShake(3);
       },
@@ -140,7 +145,8 @@ export class Game {
       },
       onBossFightStart: (level) => {
         this.bosses.spawn(level.id, width);
-        this.effects.spawnScorePopup(width / 2, height * 0.3, 'ENGAGE MOTHERSHIP');
+        this.effects.spawnScorePopup(width / 2, height * 0.3, 'ENGAGE MOTHERSHIP', 'phase');
+        this.effects.spawnScreenFlash('#ff4466', 0.22);
         this.setScreen('playing');
       },
       onLevelComplete: (level, scoreBonus) => {
@@ -159,6 +165,7 @@ export class Game {
           width / 2,
           height * 0.32,
           `LEVEL CLEAR +${scoreBonus}`,
+          'announce',
         );
         this.setScreen('levelComplete');
       },
@@ -212,18 +219,28 @@ export class Game {
   }
 
   purchaseShopItem(itemId: string): void {
+    const item = SHOP_ITEM_MAP[itemId as ShopItemId];
     const result = this.shop.purchase(itemId as ShopItemId, this.economy);
     if (result.ok) {
       this.shop.applyNewDefenseBonuses(this.base);
       this.syncLoadout();
+      if (item) {
+        this.shopToast = { message: `Purchased ${item.name}`, variant: 'purchase' };
+        this.shopToastTimer = 2.2;
+      }
     }
     this.emitSnapshot();
   }
 
   equipShopItem(itemId: string): void {
+    const item = SHOP_ITEM_MAP[itemId as ShopItemId];
     const result = this.shop.equip(itemId as ShopItemId);
     if (result.ok) {
       this.syncLoadout();
+      if (item) {
+        this.shopToast = { message: `Equipped ${item.name}`, variant: 'equip' };
+        this.shopToastTimer = 1.8;
+      }
     }
     this.emitSnapshot();
   }
@@ -432,6 +449,10 @@ export class Game {
 
     this.effects.update(dt);
     this.economy.update(dt);
+    if (this.shopToastTimer > 0) {
+      this.shopToastTimer -= dt;
+      if (this.shopToastTimer <= 0) this.shopToast = null;
+    }
     this.decayShake(dt);
 
     if (this.base.isDefeated()) {
@@ -525,6 +546,7 @@ export class Game {
       bossName: MOTHERSHIP_BOSS.name,
       showShop: this.screen === 'shop',
       shopItems: this.shop.getShopItems(this.economy.credits),
+      shopToast: this.shopToast,
     });
   }
 }

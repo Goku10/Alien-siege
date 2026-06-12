@@ -147,12 +147,19 @@ export class Turret {
 
   createMuzzleFlash(): MuzzleFlash {
     const muzzle = this.getMuzzlePosition();
+    const flashScale =
+      this.weapon.kind === 'missile' ? 1.35 :
+      this.weapon.kind === 'flak' ? 1.2 :
+      this.weapon.kind === 'laser' ? 0.9 : 1;
     return {
       x: muzzle.x,
       y: muzzle.y,
       angle: this.state.angle,
       life: this.weapon.muzzleFlashDuration,
       maxLife: this.weapon.muzzleFlashDuration,
+      color: this.weapon.color,
+      glowColor: this.weapon.glowColor,
+      size: 18 * flashScale,
       active: true,
     };
   }

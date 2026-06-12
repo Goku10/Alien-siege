@@ -58,12 +58,12 @@ export class Renderer {
     this.bossRenderer.draw(ctx, scene.boss, h);
     this.enemyRenderer.draw(ctx, scene.enemies);
     this.threatRenderer.drawDropPods(ctx, scene.dropPods);
-    this.threatRenderer.drawBombs(ctx, scene.bombs, h);
+    this.threatRenderer.drawBombs(ctx, scene.bombs, h, scene.effects);
     this.groundRenderer.draw(ctx, scene.groundEnemies);
     this.projectileRenderer.drawProjectiles(ctx, scene.projectiles);
-    this.effectsRenderer.draw(ctx, scene.effects);
     this.projectileRenderer.drawMuzzleFlashes(ctx, scene.muzzleFlashes);
     this.turretRenderer.draw(ctx, scene.turret);
+    this.effectsRenderer.draw(ctx, scene.effects, w, h);
 
     ctx.restore();
   }
