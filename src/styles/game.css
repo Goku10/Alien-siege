@@ -1,0 +1,325 @@
+.app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #0f1525 0%, #06080f 70%);
+}
+
+.game-shell {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  max-width: 1280px;
+  max-height: 720px;
+  border: 1px solid var(--color-border);
+  box-shadow:
+    0 0 40px rgba(0, 229, 192, 0.08),
+    inset 0 0 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: auto;
+  cursor: crosshair;
+}
+
+/* Overlays */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.overlay--title {
+  background: linear-gradient(
+    180deg,
+    rgba(6, 8, 15, 0.75) 0%,
+    rgba(6, 8, 15, 0.55) 40%,
+    rgba(6, 8, 15, 0.85) 100%
+  );
+  backdrop-filter: blur(4px);
+}
+
+.overlay--pause {
+  background: rgba(6, 8, 15, 0.7);
+  backdrop-filter: blur(6px);
+}
+
+.title-panel {
+  text-align: center;
+  padding: 2rem;
+  max-width: 520px;
+}
+
+.title-panel__eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 0.5rem;
+}
+
+.title-panel__title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  text-shadow: 0 0 30px rgba(0, 229, 192, 0.3);
+}
+
+.title-panel__subtitle {
+  display: block;
+  font-size: 0.45em;
+  font-weight: 400;
+  color: var(--color-text-dim);
+  letter-spacing: 0.15em;
+  margin-top: 0.25rem;
+}
+
+.title-panel__tagline {
+  color: var(--color-text-dim);
+  font-size: 1.1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.how-to-play {
+  margin-top: 2rem;
+  text-align: left;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+}
+
+.how-to-play h2 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 0.75rem;
+}
+
+.how-to-play ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 1rem;
+}
+
+.how-to-play__goal {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--color-text-dim);
+  border-top: 1px solid var(--color-accent-dim);
+  padding-top: 0.75rem;
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.85rem 2rem;
+  border-radius: 4px;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, #00c9a7, #00e5c0);
+  color: #061018;
+  box-shadow: 0 0 20px rgba(0, 229, 192, 0.3);
+}
+
+.btn--primary:hover {
+  box-shadow: 0 0 30px rgba(0, 229, 192, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn--secondary:hover {
+  background: var(--color-accent-dim);
+}
+
+/* Panels */
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.panel--centered h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.panel__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.panel__hint {
+  margin-top: 1rem;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+}
+
+/* HUD */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hud__top,
+.hud__bottom {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hud__bottom {
+  align-items: flex-end;
+}
+
+.hud__stat {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 4px 12px;
+  min-width: 80px;
+}
+
+.hud__label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--color-text-dim);
+}
+
+.hud__value {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.hud__value--credits {
+  color: var(--color-warning);
+}
+
+.hud__bar-group {
+  flex: 1;
+  min-width: 140px;
+  max-width: 220px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.hud__bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.hud__bar--heat {
+  height: 6px;
+}
+
+.hud__bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.hud__bar-fill--health {
+  background: linear-gradient(90deg, #00c9a7, #00e5c0);
+}
+
+.hud__bar-fill--breach {
+  background: linear-gradient(90deg, #ff4466, #ff8844);
+}
+
+.hud__bar-fill--heat {
+  background: linear-gradient(90deg, #ffaa00, #ff4444);
+}
+
+.hud__weapon {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  min-width: 160px;
+}
+
+.hud__weapon-name {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.prototype-badge {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%) rotate(90deg);
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0, 229, 192, 0.35);
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .hud__top {
+    gap: 0.5rem;
+  }
+
+  .hud__stat {
+    min-width: 64px;
+    padding: 3px 8px;
+  }
+
+  .hud__value {
+    font-size: 0.95rem;
+  }
+
+  .title-panel {
+    padding: 1rem;
+  }
+
+  .how-to-play {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,35 @@
+import { GameHUD } from './GameHUD';
+import { PauseOverlay } from './PauseOverlay';
+import { TitleScreen } from './TitleScreen';
+import { useGameCanvas } from '../hooks/useGameCanvas';
+
+export function GameCanvas() {
+  const {
+    canvasRef,
+    screen,
+    snapshot,
+    startGame,
+    goToTitle,
+    resumeGame,
+  } = useGameCanvas();
+
+  const showHUD = screen === 'playing' || screen === 'paused';
+
+  return (
+    <div className="game-shell">
+      <canvas
+        ref={canvasRef}
+        className="game-canvas"
+        aria-label="Alien Siege gameplay canvas"
+      />
+      <GameHUD snapshot={snapshot} visible={showHUD} />
+      {screen === 'title' && <TitleScreen onStart={startGame} />}
+      {screen === 'paused' && (
+        <PauseOverlay onResume={resumeGame} onQuit={goToTitle} />
+      )}
+      {screen === 'playing' && (
+        <div className="prototype-badge">Phase 1 — Turret Prototype</div>
+      )}
+    </div>
+  );
+}

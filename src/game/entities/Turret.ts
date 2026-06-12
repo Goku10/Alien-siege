@@ -1,0 +1,105 @@
+import { BALANCING } from '../data/balancing';
+import { MACHINE_GUN, TURRET_CONFIG } from '../data/turretConfig';
+import type { InputState, MuzzleFlash, TurretState } from '../types';
+import { angleBetween, clamp, lerpAngle, normalizeAngle, pointFromAngle } from '../../utils/math';
+
+export class Turret {
+  readonly state: TurretState;
+  private keyboardAngle: number | null = null;
+
+  constructor(canvasWidth: number, canvasHeight: number) {
+    this.state = {
+      x: canvasWidth / 2,
+      y: canvasHeight - BALANCING.turret.offsetY,
+      angle: -Math.PI / 2,
+      targetAngle: -Math.PI / 2,
+      heat: 0,
+      maxHeat: MACHINE_GUN.maxHeat,
+      cooling: false,
+      lastFireTime: 0,
+    };
+  }
+
+  resize(canvasWidth: number, canvasHeight: number): void {
+    this.state.x = canvasWidth / 2;
+    this.state.y = canvasHeight - BALANCING.turret.offsetY;
+  }
+
+  update(dt: number, input: InputState, canAimWithMouse: boolean): void {
+    if (canAimWithMouse) {
+      this.keyboardAngle = null;
+      const aimAngle = angleBetween(
+        { x: this.state.x, y: this.state.y },
+        { x: input.mouseX, y: input.mouseY },
+      );
+      this.state.targetAngle = clamp(
+        aimAngle,
+        TURRET_CONFIG.minAngle,
+        TURRET_CONFIG.maxAngle,
+      );
+    } else if (input.rotateLeft || input.rotateRight) {
+      if (this.keyboardAngle === null) {
+        this.keyboardAngle = this.state.angle;
+      }
+      const dir = input.rotateRight ? 1 : -1;
+      this.keyboardAngle = normalizeAngle(
+        this.keyboardAngle + dir * TURRET_CONFIG.keyboardRotationSpeed * dt,
+      );
+      this.state.targetAngle = clamp(
+        this.keyboardAngle,
+        TURRET_CONFIG.minAngle,
+        TURRET_CONFIG.maxAngle,
+      );
+    }
+
+    const rotT = 1 - Math.exp(-TURRET_CONFIG.rotationSpeed * dt);
+    this.state.angle = lerpAngle(this.state.angle, this.state.targetAngle, rotT);
+
+    if (this.state.heat > 0 && !this.isOverheated()) {
+      this.state.heat = Math.max(0, this.state.heat - MACHINE_GUN.coolRate * dt);
+    }
+    this.state.cooling = this.state.heat > MACHINE_GUN.maxHeat * 0.6;
+  }
+
+  getMuzzlePosition(): { x: number; y: number } {
+    return pointFromAngle(
+      { x: this.state.x, y: this.state.y },
+      this.state.angle,
+      TURRET_CONFIG.barrelLength,
+    );
+  }
+
+  canFire(now: number): boolean {
+    if (this.isOverheated()) return false;
+    const interval = 1 / MACHINE_GUN.fireRate;
+    return now - this.state.lastFireTime >= interval;
+  }
+
+  isOverheated(): boolean {
+    return this.state.heat >= this.state.maxHeat;
+  }
+
+  applyHeat(): void {
+    this.state.heat = Math.min(this.state.maxHeat, this.state.heat + MACHINE_GUN.heatPerShot);
+  }
+
+  markFired(now: number): void {
+    this.state.lastFireTime = now;
+  }
+
+  createMuzzleFlash(): MuzzleFlash {
+    const muzzle = this.getMuzzlePosition();
+    return {
+      x: muzzle.x,
+      y: muzzle.y,
+      angle: this.state.angle,
+      life: MACHINE_GUN.muzzleFlashDuration,
+      maxLife: MACHINE_GUN.muzzleFlashDuration,
+      active: true,
+    };
+  }
+
+  wantsToFire(input: InputState): boolean {
+    return input.mouseDown || input.space;
+  }
+}
