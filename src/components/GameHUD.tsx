@@ -13,10 +13,35 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
   const heatPct = (snapshot.heat / snapshot.maxHeat) * 100;
   const healthLow = healthPct <= 30;
   const breachHigh = snapshot.breachDanger;
+  const bossPct =
+    snapshot.bossMaxHealth > 0
+      ? (snapshot.bossHealth / snapshot.bossMaxHealth) * 100
+      : 0;
 
   return (
     <div className="hud" aria-live="polite">
-      {snapshot.bombWarning && (
+      {snapshot.isBossFight && (
+        <div className="hud__boss-bar" role="meter" aria-label="Boss health">
+          <div className="hud__boss-header">
+            <span className="hud__boss-name">{snapshot.bossName}</span>
+            <span className="hud__boss-phase">
+              PHASE {snapshot.bossPhase}
+              {snapshot.bossShieldActive && ' · SHIELDED'}
+            </span>
+          </div>
+          <div className="hud__boss-track">
+            <div
+              className="hud__boss-fill"
+              style={{ width: `${bossPct}%` }}
+            />
+          </div>
+          <span className="hud__boss-hp">
+            {Math.ceil(snapshot.bossHealth)} / {snapshot.bossMaxHealth}
+          </span>
+        </div>
+      )}
+
+      {snapshot.bombWarning && !snapshot.isBossFight && (
         <div className="hud__alert hud__alert--bomb" role="alert">
           INCOMING BOMB — SHOOT IT DOWN!
         </div>
@@ -45,9 +70,11 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
         <div className="hud__stat hud__stat--wave">
           <span className="hud__label">WAVE</span>
           <span className="hud__value">
-            {snapshot.wave > 0
-              ? `${snapshot.wave}/${snapshot.totalWavesInLevel}`
-              : '—'}
+            {snapshot.isBossFight
+              ? 'BOSS'
+              : snapshot.wave > 0
+                ? `${snapshot.wave}/${snapshot.totalWavesInLevel}`
+                : '—'}
           </span>
         </div>
         {snapshot.combo > 1 && (

@@ -33,6 +33,48 @@ export type GroundEnemyBehavior = 'approaching' | 'breaching' | 'attacking';
 
 export type GameOverReason = 'breach' | 'base_destroyed';
 
+export type BossAttackId = 'drones' | 'bombSpread' | 'beam' | 'shield';
+
+export interface BossWeakPoint {
+  id: string;
+  offsetX: number;
+  offsetY: number;
+  radius: number;
+  active: boolean;
+  destroyed: boolean;
+  flashTimer: number;
+}
+
+export interface BossBeam {
+  active: boolean;
+  chargeTime: number;
+  maxCharge: number;
+  damage: number;
+  targetX: number;
+  width: number;
+}
+
+export interface BossState {
+  active: boolean;
+  x: number;
+  y: number;
+  baseX: number;
+  movePhase: number;
+  health: number;
+  maxHealth: number;
+  phase: 1 | 2 | 3;
+  shieldActive: boolean;
+  shieldTimer: number;
+  attackTimer: number;
+  attackIndex: number;
+  flashTimer: number;
+  enterProgress: number;
+  weakPoints: BossWeakPoint[];
+  beam: BossBeam;
+  defeated: boolean;
+  levelId: number;
+}
+
 export type MovementPattern = 'straight' | 'sine' | 'arc' | 'bob';
 
 export type SpawnSide = 'left' | 'right';
@@ -224,4 +266,7 @@ export interface GameSnapshot {
   levelCompleteBonus: number;
   isCampaignComplete: boolean;
   totalLevels: number;
+  bossPhase: number;
+  bossShieldActive: boolean;
+  bossName: string;
 }

@@ -19,10 +19,7 @@ export function GameCanvas() {
     continueLevel,
   } = useGameCanvas();
 
-  const showHUD =
-    screen === 'playing' ||
-    screen === 'paused' ||
-    screen === 'bossWarning';
+  const showHUD = screen === 'playing' || screen === 'paused';
 
   return (
     <div className="game-shell">
@@ -53,7 +50,7 @@ export function GameCanvas() {
         />
       )}
       {screen === 'playing' && (
-        <div className="prototype-badge">Phase 4 — Level Progression</div>
+        <div className="prototype-badge">Phase 5 — Mothership Boss</div>
       )}
     </div>
   );

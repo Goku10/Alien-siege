@@ -6,6 +6,7 @@ export type LevelPhase =
   | 'intro'
   | 'combat'
   | 'bossWarning'
+  | 'bossFight'
   | 'levelComplete'
   | 'campaignComplete';
 
@@ -13,6 +14,7 @@ export interface LevelManagerCallbacks {
   onLevelIntro?: (level: LevelConfig) => void;
   onCombatStart?: (level: LevelConfig) => void;
   onBossWarning?: (level: LevelConfig) => void;
+  onBossFightStart?: (level: LevelConfig) => void;
   onLevelComplete?: (level: LevelConfig, bonus: number) => void;
   onCampaignComplete?: () => void;
 }
@@ -64,6 +66,14 @@ export class LevelManager {
     return this.phase === 'combat';
   }
 
+  isBossFightActive(): boolean {
+    return this.phase === 'bossFight';
+  }
+
+  isGameplayActive(): boolean {
+    return this.phase === 'combat' || this.phase === 'bossFight';
+  }
+
   /** Advance from level complete to next level or campaign end. */
   continueAfterLevel(): boolean {
     if (this.phase !== 'levelComplete') return false;
@@ -89,9 +99,16 @@ export class LevelManager {
     this.callbacks.onBossWarning?.(this.getCurrentLevel());
   }
 
-  /** Called when boss warning timer expires (boss fight scaffold — Phase 5). */
+  /** Boss warning timer expired — begin mothership fight. */
   finishBossWarning(): void {
     if (this.phase !== 'bossWarning') return;
+    this.phase = 'bossFight';
+    this.callbacks.onBossFightStart?.(this.getCurrentLevel());
+  }
+
+  /** Called when mothership is destroyed. */
+  onBossDefeated(): void {
+    if (this.phase !== 'bossFight') return;
     const level = this.getCurrentLevel();
     this.lastLevelBonus = Math.floor(
       level.levelCompleteBonus * getScalingForLevel(level.id).clearBonusScale,

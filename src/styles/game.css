@@ -177,6 +177,66 @@
   font-size: 1rem;
 }
 
+.hud__boss-bar {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, 70%);
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid rgba(255, 68, 102, 0.6);
+  border-radius: 6px;
+  padding: 8px 14px;
+  box-shadow: 0 0 24px rgba(255, 68, 102, 0.25);
+}
+
+.hud__boss-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.hud__boss-name {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #ff6b6b;
+  text-transform: uppercase;
+}
+
+.hud__boss-phase {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--color-warning);
+}
+
+.hud__boss-track {
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hud__boss-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c1121f, #ff6b35, #ffaa00);
+  border-radius: 3px;
+  transition: width 0.15s linear;
+  box-shadow: 0 0 12px rgba(255, 107, 53, 0.6);
+}
+
+.hud__boss-hp {
+  display: block;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+  margin-top: 4px;
+}
+
 .title-panel {
   text-align: center;
   padding: 2rem;

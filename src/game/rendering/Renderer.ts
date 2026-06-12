@@ -1,3 +1,4 @@
+import { BossRenderer } from './BossRenderer';
 import { BackgroundRenderer } from './BackgroundRenderer';
 import { EffectsRenderer } from './EffectsRenderer';
 import { EnemyRenderer } from './EnemyRenderer';
@@ -8,6 +9,7 @@ import { TurretRenderer } from './TurretRenderer';
 import type { EffectsManager } from '../systems/EffectsManager';
 import type {
   BombState,
+  BossState,
   DropPodState,
   EnemyState,
   GroundEnemyState,
@@ -24,6 +26,7 @@ export interface RenderScene {
   dropPods: DropPodState[];
   groundEnemies: GroundEnemyState[];
   muzzleFlashes: MuzzleFlash[];
+  boss: BossState | null;
   effects: EffectsManager;
   shakeX: number;
   shakeY: number;
@@ -37,6 +40,7 @@ export class Renderer {
   private groundRenderer = new GroundEnemyRenderer();
   private turretRenderer = new TurretRenderer();
   private projectileRenderer = new ProjectileRenderer();
+  private bossRenderer = new BossRenderer();
   private effectsRenderer = new EffectsRenderer();
 
   update(dt: number): void {
@@ -51,6 +55,7 @@ export class Renderer {
     ctx.translate(scene.shakeX, scene.shakeY);
 
     this.threatRenderer.drawWarnings(ctx, w, h, scene.effects, scene.breachDanger);
+    this.bossRenderer.draw(ctx, scene.boss, h);
     this.enemyRenderer.draw(ctx, scene.enemies);
     this.threatRenderer.drawDropPods(ctx, scene.dropPods);
     this.threatRenderer.drawBombs(ctx, scene.bombs, h);

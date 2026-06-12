@@ -35,6 +35,9 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   levelCompleteBonus: 0,
   isCampaignComplete: false,
   totalLevels: 3,
+  bossPhase: 0,
+  bossShieldActive: false,
+  bossName: 'Alien Mothership',
 };
 
 export function useGameCanvas() {

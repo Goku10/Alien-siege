@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 4 complete  
+**Current phase:** Phase 5 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -42,8 +42,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 2 | Flying enemies, collisions, waves, score, combo | ✅ Done |
 | 3 | Ground enemies, breach system | ✅ Done |
 | 4 | Level structure, scaling waves, boss warning scaffold | ✅ Done |
-| 5 | Mothership boss fight + credits economy | ⏳ Next |
-| 6 | Between-level shop, weapons, upgrades | Pending |
+| 5 | Mothership boss fight (3 phases) | ✅ Done |
+| 6 | Credits economy + between-level shop | ⏳ Next |
 | 7 | Polish — particles, audio hooks, balance pass | Pending |
 
 ---
@@ -130,7 +130,25 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 4)
+### Phase 5 — Mothership boss
+**Commit:** *(pending push)* — *Phase 5: Playable mothership boss fight.*
+
+**Built:**
+- `BossManager` + `Boss` entity + `bossConfig.ts`
+- Mothership with entrance, hover movement, 900–1400 HP by level
+- **3 phases** at 67% / 34% health with escalating attacks
+- Attacks: drone release, bomb spread, charging beam, shield phase
+- **2 weak-point cores** — 2× damage; body hits 0.35×; shield blocks body
+- `BossRenderer` — hull, cores, shield bubble, beam telegraph
+- `CollisionSystem` extended for boss hits (reuses projectiles)
+- Flow: boss warning → fight → defeat → level complete + boss score bonus
+- HUD boss health bar with phase + shield indicator
+
+**Intentionally deferred:** shop, credits earning.
+
+---
+
+## Current state (after Phase 5)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
@@ -148,7 +166,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | ThreatSystem | `src/game/systems/ThreatSystem.ts` | Drops, bombs, pods, ground AI |
 | EntityManager | `src/game/systems/EntityManager.ts` | All entity pools |
 | CollisionSystem | `src/game/systems/CollisionSystem.ts` | Multi-layer bullet hits |
-| LevelManager | `src/game/systems/LevelManager.ts` | Level phases and progression |
+| LevelManager | `src/game/systems/LevelManager.ts` | intro → combat → bossWarning → bossFight → complete |
+| BossManager | `src/game/systems/BossManager.ts` | Mothership phases, attacks, defeat |
 | WaveManager | `src/game/systems/WaveManager.ts` | Per-level timed wave spawns |
 | EconomyManager | `src/game/systems/EconomyManager.ts` | Score, combo |
 | EffectsManager | `src/game/systems/EffectsManager.ts` | VFX + warning markers |
@@ -211,14 +230,13 @@ input → turret → firing → entities.update → flying drops
 
 ---
 
-## Phase 5 preview (next work)
+## Phase 6 preview (next work)
 
-- [ ] Playable mothership boss after boss warning
-- [ ] Boss health bar, multi-phase patterns
-- [ ] Credits economy (separate from score)
-- [ ] Boss defeat → level complete → shop (Phase 6)
+- [ ] Credits economy (earn from kills, waves, boss, level clear)
+- [ ] Between-level shop screen
+- [ ] Purchasable weapons and upgrades
 
-**Do not start in Phase 5:** full shop unless credits are ready.
+**Config:** `src/game/data/bossConfig.ts` for boss tuning.
 
 ---
 
@@ -246,7 +264,7 @@ When finishing a phase:
 - Credits shown in HUD but never earned (by design until Phase 5).
 - Flyers exiting screen without kill causes no penalty.
 - Ground threats persist across wave transitions (intentional pressure).
-- `ShopManager`, `BossManager` are still stubs.
+- `ShopManager` is still a stub.
 - No brute/spore pod ground types yet.
 - No tests.
 

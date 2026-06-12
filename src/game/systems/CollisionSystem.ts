@@ -8,6 +8,7 @@ import { projectilePool } from '../entities/Projectile';
 import type { EnemyState, GroundEnemyState, ProjectileState } from '../types';
 import { EconomyManager } from './EconomyManager';
 import { EffectsManager } from './EffectsManager';
+import type { BossManager } from './BossManager';
 import type { EntityManager } from './EntityManager';
 
 export interface CollisionCallbacks {
@@ -30,10 +31,12 @@ export class CollisionSystem {
     entities: EntityManager,
     effects: EffectsManager,
     economy: EconomyManager,
+    bosses: BossManager | null,
     callbacks: CollisionCallbacks = {},
   ): void {
     for (const proj of entities.projectiles) {
       if (!proj.active) continue;
+      if (this.hitBoss(proj, bosses, effects, callbacks)) continue;
       if (this.hitFlying(proj, entities.enemies, effects, economy, callbacks)) continue;
       if (this.hitGround(proj, entities.groundEnemies, effects, economy, callbacks)) continue;
       if (this.hitBomb(proj, entities, effects, economy, callbacks)) continue;
@@ -44,6 +47,28 @@ export class CollisionSystem {
   private consumeProjectile(proj: ProjectileState): void {
     proj.active = false;
     projectilePool.release(proj);
+  }
+
+  private hitBoss(
+    proj: ProjectileState,
+    bosses: BossManager | null,
+    effects: EffectsManager,
+    callbacks: CollisionCallbacks,
+  ): boolean {
+    if (!bosses?.isActive() || !bosses.boss) return false;
+    const result = bosses.applyProjectileHit(
+      bosses.boss,
+      proj.x,
+      proj.y,
+      proj.radius,
+      proj.damage,
+      effects,
+      callbacks.onScreenShake,
+    );
+    if (!result.hit) return false;
+    callbacks.onHit?.();
+    this.consumeProjectile(proj);
+    return true;
   }
 
   private hitFlying(

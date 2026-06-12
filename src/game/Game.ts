@@ -1,8 +1,10 @@
 import { BALANCING } from './data/balancing';
+import { MOTHERSHIP_BOSS } from './data/bossConfig';
 import { MACHINE_GUN } from './data/turretConfig';
 import { Turret } from './entities/Turret';
 import { Renderer } from './rendering/Renderer';
 import { BaseDefenseSystem } from './systems/BaseDefenseSystem';
+import { BossManager } from './systems/BossManager';
 import { CollisionSystem } from './systems/CollisionSystem';
 import { EconomyManager } from './systems/EconomyManager';
 import { EffectsManager } from './systems/EffectsManager';
@@ -31,6 +33,7 @@ export class Game {
   private effects: EffectsManager;
   private levels: LevelManager;
   private waves: WaveManager;
+  private bosses: BossManager;
   private threats: ThreatSystem;
   private base: BaseDefenseSystem;
   private turret: Turret;
@@ -65,6 +68,16 @@ export class Game {
     this.effects = new EffectsManager();
     this.base = new BaseDefenseSystem();
     this.threats = new ThreatSystem();
+    this.bosses = new BossManager({
+      onDefeated: (bonus) => {
+        this.economy.registerKill(bonus);
+        this.levels.onBossDefeated();
+      },
+      onPhaseChange: () => {
+        this.addScreenShake(5);
+      },
+      onScreenShake: (amount) => this.addScreenShake(amount),
+    });
 
     this.waves = new WaveManager({
       onSpawn: (typeId, side, y, mods) => {
@@ -98,12 +111,18 @@ export class Game {
         this.entities.clearThreats();
         this.setScreen('bossWarning');
       },
+      onBossFightStart: (level) => {
+        this.bosses.spawn(level.id, width);
+        this.effects.spawnScorePopup(width / 2, height * 0.3, 'ENGAGE MOTHERSHIP');
+        this.setScreen('playing');
+      },
       onLevelComplete: (_level, bonus) => {
         this.levelCompleteBonus = bonus;
         this.economy.score += bonus;
         if (this.levels.getLevelNumber() >= this.levels.getTotalLevels()) {
           this.campaignComplete = true;
         }
+        this.bosses.reset();
         this.effects.spawnScorePopup(
           width / 2,
           height * 0.32,
@@ -163,6 +182,7 @@ export class Game {
     const hasNext = this.levels.continueAfterLevel();
     if (hasNext) {
       this.waves.reset();
+      this.bosses.reset();
       this.setScreen('playing');
     } else {
       this.campaignComplete = true;
@@ -171,7 +191,7 @@ export class Game {
   }
 
   togglePause(): void {
-    if (this.screen === 'playing' && this.levels.isCombatActive()) {
+    if (this.screen === 'playing' && this.levels.isGameplayActive()) {
       this.setScreen('paused');
     } else if (this.screen === 'paused') {
       this.setScreen('playing');
@@ -190,6 +210,7 @@ export class Game {
     this.effects.clear();
     this.entities.clear();
     this.waves.reset();
+    this.bosses.reset();
     this.levels.reset();
     this.turret = new Turret(BALANCING.canvas.width, BALANCING.canvas.height);
   }
@@ -197,6 +218,7 @@ export class Game {
   private triggerGameOver(): void {
     this.finalScore = this.economy.score;
     this.gameOverReason = this.base.getDefeatReason();
+    this.bosses.reset();
     this.setScreen('gameOver');
     this.addScreenShake(10);
   }
@@ -227,7 +249,7 @@ export class Game {
       return;
     }
 
-    if (this.screen === 'playing' && !this.levels.isCombatActive()) {
+    if (this.screen === 'playing' && !this.levels.isGameplayActive()) {
       this.effects.update(dt);
       this.decayShake(dt);
       this.emitSnapshot();
@@ -273,9 +295,24 @@ export class Game {
       this.waves.update(dt, this.entities.getAliveFlyingCount());
     }
 
-    this.collision.process(this.entities, this.effects, this.economy, {
-      onScreenShake: (amount) => this.addScreenShake(amount),
-    });
+    if (this.levels.isBossFightActive()) {
+      this.bosses.update(
+        dt,
+        this.entities,
+        this.base,
+        this.effects,
+        width,
+        height,
+      );
+    }
+
+    this.collision.process(
+      this.entities,
+      this.effects,
+      this.economy,
+      this.bosses,
+      { onScreenShake: (amount) => this.addScreenShake(amount) },
+    );
     this.entities.pruneProjectiles();
 
     this.threats.updateThreats(
@@ -324,6 +361,7 @@ export class Game {
       dropPods: this.entities.dropPods,
       groundEnemies: this.entities.groundEnemies,
       muzzleFlashes: this.entities.muzzleFlashes,
+      boss: this.bosses.boss,
       effects: this.effects,
       shakeX: this.shakeX,
       shakeY: this.shakeY,
@@ -334,6 +372,8 @@ export class Game {
   private emitSnapshot(): void {
     const level = this.levels.getCurrentLevel();
     const phase = this.levels.getPhase();
+    const boss = this.bosses.boss;
+    const isBossFight = this.levels.isBossFightActive() && this.bosses.isActive();
 
     this.callbacks.onSnapshot?.({
       score: this.economy.score,
@@ -350,9 +390,9 @@ export class Game {
       maxHeat: this.turret.state.maxHeat,
       secondaryCooldown: 0,
       secondaryMaxCooldown: 1,
-      isBossFight: this.screen === 'bossWarning',
-      bossHealth: 0,
-      bossMaxHealth: 0,
+      isBossFight,
+      bossHealth: boss?.health ?? 0,
+      bossMaxHealth: boss?.maxHealth ?? 0,
       enemiesRemaining: this.entities.getAliveFlyingCount(),
       groundThreats: this.entities.getGroundThreatCount(),
       breachDanger: this.base.isBreachDanger(),
@@ -368,6 +408,9 @@ export class Game {
       levelCompleteBonus: this.levelCompleteBonus,
       isCampaignComplete: this.campaignComplete,
       totalLevels: this.levels.getTotalLevels(),
+      bossPhase: boss?.phase ?? 0,
+      bossShieldActive: boss?.shieldActive ?? false,
+      bossName: MOTHERSHIP_BOSS.name,
     });
   }
 }
