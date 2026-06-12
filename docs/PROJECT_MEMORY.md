@@ -163,8 +163,9 @@ input → turret → firing → waves → collision → prune projectiles
 |--------|------|---------|
 | `162ad16` | 2026-06-12 | Phase 1 — scaffold + turret prototype |
 | `8068770` | 2026-06-12 | Phase 2 — enemies, waves, scoring, VFX |
+| `e942076` | 2026-06-12 | Project memory module + AGENTS.md |
 
-**Convention:** One commit per phase, pushed to `origin/main` immediately after.
+**Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
 ---
 
