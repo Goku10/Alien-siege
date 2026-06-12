@@ -180,13 +180,25 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 7)
+### Phase 8 — Multi-weapon arsenal
+**Commit:** `f320e2b` — *Phase 8: Five distinct weapon types with unique mechanics.*
+
+**Built:**
+- `weapons.ts` — Machine Gun, Laser Cannon, Missile Launcher, Flak Cannon, Plasma Blaster
+- Mechanics: pierce beams, missile airburst splash, flak pellet spread, plasma splash blobs, heat vs reload gating
+- `CollisionSystem` splash + pierce; boss-compatible direct and splash hits
+- HUD equipped weapon name, kind tag, ammo/reload or heat bar
+- Shop weapon entries updated for all five types
+
+---
+
+## Current state (after Phase 8)
 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
 2. Waves spawn with level scaling; shoot flyers, bombs, pods, ground units
 3. Wave clear bonus between waves; final wave → boss warning → mothership fight → level complete
-4. Level complete bonus → Next Level (or Campaign Complete after L3)
+4. Level complete → summary → shop → next level (or Campaign Complete after L3)
 5. **Game over** if breach fills or base health hits zero
 6. Base health/breach persist across levels within a run
 
@@ -264,6 +276,7 @@ input → turret → firing → entities.update → flying drops
 | `5207bb4` | 2026-06-12 | Phase 5 — mothership boss fight |
 | `1d04117` | 2026-06-12 | Phase 6 — credits economy + level summary |
 | `8316102` | 2026-06-12 | Phase 7 — between-level armory shop |
+| `f320e2b` | 2026-06-12 | Phase 8 — multi-weapon arsenal |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
