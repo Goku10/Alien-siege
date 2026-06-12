@@ -166,7 +166,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 7 — Between-level shop
-**Commit:** *(pending)* — *Phase 7: Between-level armory shop.*
+**Commit:** `8316102` — *Phase 7: Between-level armory shop for credits.*
 
 **Built:**
 - `ShopManager` — buy, equip, owned/equipped state, loadout stat resolution
@@ -262,6 +262,7 @@ input → turret → firing → entities.update → flying drops
 | `ecbdd61` | 2026-06-12 | Phase 4 — level manager, scaled waves, boss warning |
 | `5207bb4` | 2026-06-12 | Phase 5 — mothership boss fight |
 | `1d04117` | 2026-06-12 | Phase 6 — credits economy + level summary |
+| `8316102` | 2026-06-12 | Phase 7 — between-level armory shop |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
