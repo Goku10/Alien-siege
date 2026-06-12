@@ -131,7 +131,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ---
 
 ### Phase 5 — Mothership boss
-**Commit:** *(pending push)* — *Phase 5: Playable mothership boss fight.*
+**Commit:** `5207bb4` — *Phase 5: Playable mothership boss fight.*
 
 **Built:**
 - `BossManager` + `Boss` entity + `bossConfig.ts`
@@ -153,7 +153,7 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 ### Playable loop
 1. Title → Start Defense → Level intro (3.5s)
 2. Waves spawn with level scaling; shoot flyers, bombs, pods, ground units
-3. Wave clear bonus between waves; final wave → boss warning (4s)
+3. Wave clear bonus between waves; final wave → boss warning → mothership fight → level complete
 4. Level complete bonus → Next Level (or Campaign Complete after L3)
 5. **Game over** if breach fills or base health hits zero
 6. Base health/breach persist across levels within a run
@@ -225,6 +225,7 @@ input → turret → firing → entities.update → flying drops
 | `2e6a144` | 2026-06-12 | Memory doc git log update |
 | `e654341` | 2026-06-12 | Phase 3 — ground threats, breach, game over |
 | `ecbdd61` | 2026-06-12 | Phase 4 — level manager, scaled waves, boss warning |
+| `5207bb4` | 2026-06-12 | Phase 5 — mothership boss fight |
 
 **Convention:** One commit per phase, pushed to `origin/main` immediately after. Update this file after every phase.
 
