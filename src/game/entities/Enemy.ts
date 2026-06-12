@@ -139,3 +139,16 @@ export function damageEnemy(enemy: EnemyState, amount: number): void {
   enemy.health -= amount;
   enemy.flashTimer = 0.1;
 }
+
+export interface EnemySpawnModifiers {
+  speedMultiplier: number;
+  healthMultiplier: number;
+  scoreMultiplier: number;
+}
+
+export function applyEnemyModifiers(enemy: EnemyState, mods: EnemySpawnModifiers): void {
+  enemy.vx *= mods.speedMultiplier;
+  enemy.health = Math.ceil(enemy.health * mods.healthMultiplier);
+  enemy.maxHealth = enemy.health;
+  enemy.scoreValue = Math.ceil(enemy.scoreValue * mods.scoreMultiplier);
+}

@@ -9,6 +9,7 @@ import { EffectsManager } from './systems/EffectsManager';
 import { EntityManager } from './systems/EntityManager';
 import { GameLoop } from './systems/GameLoop';
 import { InputManager } from './systems/InputManager';
+import { LevelManager } from './systems/LevelManager';
 import { ThreatSystem } from './systems/ThreatSystem';
 import { WaveManager } from './systems/WaveManager';
 import type { GameOverReason, GameScreen, GameSnapshot } from './types';
@@ -28,6 +29,7 @@ export class Game {
   private collision: CollisionSystem;
   private economy: EconomyManager;
   private effects: EffectsManager;
+  private levels: LevelManager;
   private waves: WaveManager;
   private threats: ThreatSystem;
   private base: BaseDefenseSystem;
@@ -39,9 +41,10 @@ export class Game {
   private shakeIntensity = 0;
   private shakeX = 0;
   private shakeY = 0;
-  private level = 1;
   private gameOverReason: GameOverReason | null = null;
   private finalScore = 0;
+  private levelCompleteBonus = 0;
+  private campaignComplete = false;
 
   constructor(canvas: HTMLCanvasElement, callbacks: GameCallbacks = {}) {
     const ctx = canvas.getContext('2d');
@@ -62,16 +65,57 @@ export class Game {
     this.effects = new EffectsManager();
     this.base = new BaseDefenseSystem();
     this.threats = new ThreatSystem();
+
     this.waves = new WaveManager({
-      onSpawn: (typeId, side, y) => {
-        this.entities.spawnEnemy(typeId, side, width, y);
+      onSpawn: (typeId, side, y, mods) => {
+        this.entities.spawnEnemy(typeId, side, width, y, mods);
+      },
+      onWaveStart: (waveNum, totalWaves) => {
+        this.effects.spawnScorePopup(
+          width / 2,
+          height * 0.28,
+          `WAVE ${waveNum} / ${totalWaves}`,
+        );
       },
       onWaveComplete: (_waveNum, clearBonus) => {
         const bonus = this.economy.awardWaveClear(clearBonus);
         this.effects.spawnScorePopup(width / 2, height * 0.35, `WAVE CLEAR +${bonus}`);
         this.addScreenShake(3);
       },
+      onLevelWavesComplete: () => {
+        this.levels.onAllWavesComplete();
+      },
     });
+
+    this.levels = new LevelManager({
+      onLevelIntro: () => {
+        this.setScreen('playing');
+      },
+      onCombatStart: (level) => {
+        this.waves.startLevel(level, this.levels.getScaling());
+      },
+      onBossWarning: () => {
+        this.entities.clearThreats();
+        this.setScreen('bossWarning');
+      },
+      onLevelComplete: (_level, bonus) => {
+        this.levelCompleteBonus = bonus;
+        this.economy.score += bonus;
+        if (this.levels.getLevelNumber() >= this.levels.getTotalLevels()) {
+          this.campaignComplete = true;
+        }
+        this.effects.spawnScorePopup(
+          width / 2,
+          height * 0.32,
+          `LEVEL CLEAR +${bonus}`,
+        );
+        this.setScreen('levelComplete');
+      },
+      onCampaignComplete: () => {
+        this.campaignComplete = true;
+      },
+    });
+
     this.turret = new Turret(width, height);
 
     this.loop = new GameLoop(
@@ -98,11 +142,11 @@ export class Game {
     this.screen = screen;
     this.callbacks.onScreenChange?.(screen);
 
-    if (screen === 'playing') {
-      this.loop.setPaused(false);
-    } else if (screen === 'paused' || screen === 'gameOver') {
-      this.loop.setPaused(true);
-    }
+    const paused =
+      screen === 'paused' ||
+      screen === 'gameOver' ||
+      screen === 'levelComplete';
+    this.loop.setPaused(paused);
   }
 
   beginPrototypeSession(): void {
@@ -115,8 +159,19 @@ export class Game {
     this.setScreen('playing');
   }
 
+  continueToNextLevel(): void {
+    const hasNext = this.levels.continueAfterLevel();
+    if (hasNext) {
+      this.waves.reset();
+      this.setScreen('playing');
+    } else {
+      this.campaignComplete = true;
+      this.setScreen('levelComplete');
+    }
+  }
+
   togglePause(): void {
-    if (this.screen === 'playing') {
+    if (this.screen === 'playing' && this.levels.isCombatActive()) {
       this.setScreen('paused');
     } else if (this.screen === 'paused') {
       this.setScreen('playing');
@@ -125,16 +180,18 @@ export class Game {
 
   resetSession(): void {
     this.elapsedTime = 0;
-    this.level = 1;
     this.gameOverReason = null;
     this.finalScore = 0;
+    this.levelCompleteBonus = 0;
+    this.campaignComplete = false;
     this.shakeIntensity = 0;
     this.base.reset();
     this.economy.reset();
     this.effects.clear();
     this.entities.clear();
+    this.waves.reset();
+    this.levels.reset();
     this.turret = new Turret(BALANCING.canvas.width, BALANCING.canvas.height);
-    this.waves.start();
   }
 
   private triggerGameOver(): void {
@@ -142,11 +199,16 @@ export class Game {
     this.gameOverReason = this.base.getDefeatReason();
     this.setScreen('gameOver');
     this.addScreenShake(10);
-    // Audio hook: playGameOver()
   }
 
   private update(dt: number): void {
-    if (this.screen !== 'playing') {
+    const passiveScreens: GameScreen[] = [
+      'paused',
+      'gameOver',
+      'levelComplete',
+    ];
+
+    if (passiveScreens.includes(this.screen)) {
       if (this.input.consumeEscape() && this.screen === 'paused') {
         this.setScreen('playing');
       }
@@ -156,6 +218,26 @@ export class Game {
 
     this.elapsedTime += dt;
     this.renderer.update(dt);
+    this.levels.update(dt);
+
+    if (this.screen === 'bossWarning') {
+      this.effects.update(dt);
+      this.decayShake(dt);
+      this.emitSnapshot();
+      return;
+    }
+
+    if (this.screen === 'playing' && !this.levels.isCombatActive()) {
+      this.effects.update(dt);
+      this.decayShake(dt);
+      this.emitSnapshot();
+      return;
+    }
+
+    if (this.screen !== 'playing') {
+      this.emitSnapshot();
+      return;
+    }
 
     if (this.input.consumeEscape()) {
       this.setScreen('paused');
@@ -187,7 +269,9 @@ export class Game {
       this.effects,
     );
 
-    this.waves.update(dt, this.entities.getAliveFlyingCount());
+    if (this.levels.isCombatActive()) {
+      this.waves.update(dt, this.entities.getAliveFlyingCount());
+    }
 
     this.collision.process(this.entities, this.effects, this.economy, {
       onScreenShake: (amount) => this.addScreenShake(amount),
@@ -248,14 +332,17 @@ export class Game {
   }
 
   private emitSnapshot(): void {
+    const level = this.levels.getCurrentLevel();
+    const phase = this.levels.getPhase();
+
     this.callbacks.onSnapshot?.({
       score: this.economy.score,
       credits: 0,
-      level: this.level,
+      level: this.levels.getLevelNumber(),
       wave: this.waves.getWaveNumber(),
       baseHealth: this.base.health,
       maxBaseHealth: this.base.maxHealth,
-      breach: this.breach,
+      breach: this.base.breach,
       maxBreach: this.base.maxBreach,
       combo: this.economy.getCombo(),
       weaponName: MACHINE_GUN.name,
@@ -263,7 +350,7 @@ export class Game {
       maxHeat: this.turret.state.maxHeat,
       secondaryCooldown: 0,
       secondaryMaxCooldown: 1,
-      isBossFight: false,
+      isBossFight: this.screen === 'bossWarning',
       bossHealth: 0,
       bossMaxHealth: 0,
       enemiesRemaining: this.entities.getAliveFlyingCount(),
@@ -272,10 +359,15 @@ export class Game {
       bombWarning: this.threats.bombWarningActive,
       gameOverReason: this.gameOverReason,
       finalScore: this.finalScore,
+      levelName: level.name,
+      levelSubtitle: level.subtitle,
+      waveInLevel: this.waves.getWaveNumber(),
+      totalWavesInLevel: this.waves.getTotalWaves() || level.waves.length,
+      showLevelIntro: phase === 'intro',
+      levelIntroText: level.introText,
+      levelCompleteBonus: this.levelCompleteBonus,
+      isCampaignComplete: this.campaignComplete,
+      totalLevels: this.levels.getTotalLevels(),
     });
-  }
-
-  private get breach(): number {
-    return this.base.breach;
   }
 }

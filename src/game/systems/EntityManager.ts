@@ -1,7 +1,7 @@
 import { bombPool, spawnBomb, updateBomb } from '../entities/Bomb';
 import { dropPodPool, spawnDropPod, updateDropPod } from '../entities/DropPod';
 import { groundEnemyPool, spawnGroundEnemy, updateGroundEnemy } from '../entities/GroundEnemy';
-import { spawnEnemy, updateEnemy } from '../entities/Enemy';
+import { applyEnemyModifiers, spawnEnemy, updateEnemy, type EnemySpawnModifiers } from '../entities/Enemy';
 import { spawnProjectile, updateProjectile } from '../entities/Projectile';
 import { getBaseLayout } from '../utils/baseLayout';
 import type {
@@ -38,14 +38,31 @@ export class EntityManager {
     this.muzzleFlashes.length = 0;
   }
 
+  /** Remove all active threats between levels (keeps base state). */
+  clearThreats(): void {
+    this.enemies.length = 0;
+    this.bombs.length = 0;
+    this.dropPods.length = 0;
+    this.groundEnemies.length = 0;
+    this.projectiles.length = 0;
+    this.muzzleFlashes.length = 0;
+  }
+
   spawnBullet(x: number, y: number, angle: number): ProjectileState {
     const bullet = spawnProjectile(x, y, angle);
     this.projectiles.push(bullet);
     return bullet;
   }
 
-  spawnEnemy(typeId: EnemyTypeId, side: SpawnSide, boundsW: number, y?: number): EnemyState {
+  spawnEnemy(
+    typeId: EnemyTypeId,
+    side: SpawnSide,
+    boundsW: number,
+    y?: number,
+    modifiers?: EnemySpawnModifiers,
+  ): EnemyState {
     const enemy = spawnEnemy(typeId, side, boundsW, y);
+    if (modifiers) applyEnemyModifiers(enemy, modifiers);
     this.enemies.push(enemy);
     return enemy;
   }

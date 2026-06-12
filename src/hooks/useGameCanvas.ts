@@ -26,6 +26,15 @@ const DEFAULT_SNAPSHOT: GameSnapshot = {
   bombWarning: false,
   gameOverReason: null,
   finalScore: 0,
+  levelName: '',
+  levelSubtitle: '',
+  waveInLevel: 0,
+  totalWavesInLevel: 0,
+  showLevelIntro: false,
+  levelIntroText: '',
+  levelCompleteBonus: 0,
+  isCampaignComplete: false,
+  totalLevels: 3,
 };
 
 export function useGameCanvas() {
@@ -72,6 +81,10 @@ export function useGameCanvas() {
     gameRef.current?.restartSession();
   }, []);
 
+  const continueLevel = useCallback(() => {
+    gameRef.current?.continueToNextLevel();
+  }, []);
+
   return {
     canvasRef,
     screen,
@@ -81,5 +94,6 @@ export function useGameCanvas() {
     togglePause,
     resumeGame,
     restartGame,
+    continueLevel,
   };
 }

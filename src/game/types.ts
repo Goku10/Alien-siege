@@ -215,4 +215,13 @@ export interface GameSnapshot {
   bombWarning: boolean;
   gameOverReason: GameOverReason | null;
   finalScore: number;
+  levelName: string;
+  levelSubtitle: string;
+  waveInLevel: number;
+  totalWavesInLevel: number;
+  showLevelIntro: boolean;
+  levelIntroText: string;
+  levelCompleteBonus: number;
+  isCampaignComplete: boolean;
+  totalLevels: number;
 }

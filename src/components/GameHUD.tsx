@@ -36,13 +36,19 @@ export function GameHUD({ snapshot, visible }: GameHUDProps) {
           <span className="hud__label">CREDITS</span>
           <span className="hud__value hud__value--credits">{snapshot.credits}</span>
         </div>
-        <div className="hud__stat">
+        <div className="hud__stat hud__stat--level">
           <span className="hud__label">LEVEL</span>
-          <span className="hud__value">{snapshot.level}</span>
+          <span className="hud__value">
+            {snapshot.level}/{snapshot.totalLevels}
+          </span>
         </div>
-        <div className="hud__stat">
+        <div className="hud__stat hud__stat--wave">
           <span className="hud__label">WAVE</span>
-          <span className="hud__value">{snapshot.wave || '—'}</span>
+          <span className="hud__value">
+            {snapshot.wave > 0
+              ? `${snapshot.wave}/${snapshot.totalWavesInLevel}`
+              : '—'}
+          </span>
         </div>
         {snapshot.combo > 1 && (
           <div className="hud__stat hud__stat--combo">

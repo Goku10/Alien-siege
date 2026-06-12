@@ -4,7 +4,7 @@
 > Read this file first when resuming work on this repo (human or AI agent).
 
 **Last updated:** 2026-06-12  
-**Current phase:** Phase 3 complete  
+**Current phase:** Phase 4 complete  
 **Remote:** https://github.com/Goku10/Alien-siege  
 **Branch:** `main`
 
@@ -41,8 +41,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | 1 | Scaffold, turret prototype, canvas, HUD shell | ✅ Done |
 | 2 | Flying enemies, collisions, waves, score, combo | ✅ Done |
 | 3 | Ground enemies, breach system | ✅ Done |
-| 4 | Mothership boss fights | ⏳ Next |
-| 5 | Credits economy (separate from score) | Pending |
+| 4 | Level structure, scaling waves, boss warning scaffold | ✅ Done |
+| 5 | Mothership boss fight + credits economy | ⏳ Next |
 | 6 | Between-level shop, weapons, upgrades | Pending |
 | 7 | Polish — particles, audio hooks, balance pass | Pending |
 
@@ -113,16 +113,32 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ---
 
-## Current state (after Phase 3)
+### Phase 4 — Level progression
+**Commit:** *(pending push)* — *Phase 4: Level manager, scaled waves, boss warning flow.*
+
+**Built:**
+- `LevelManager` — intro → combat → boss warning → level complete → next level
+- 3 levels in `levels.ts` (4, 5, 5 waves) with intro text and level bonuses
+- `levelScaling.ts` — per-level speed/health/spawn/bonus multipliers
+- `WaveManager` refactor — no infinite loop; level-scoped waves with scaling
+- UI: `LevelIntroOverlay`, `BossWarningScreen`, `LevelCompleteScreen`
+- HUD: Level X/3, Wave Y/Z
+- Wave start/complete popups; threats cleared on boss warning
+- Campaign complete after Level 3
+
+**Intentionally deferred:** actual mothership boss fight, shop.
+
+---
+
+## Current state (after Phase 4)
 
 ### Playable loop
-1. Title screen → Start Defense
-2. Waves spawn flying enemies; carriers/bombers drop pods and bombs
-3. Shoot everything — flyers, bombs, pods (before landing), ground aliens
-4. Ground enemies reach base lane → breach meter rises; spitter also damages base HP
-5. Bombs impact base → base health drops
-6. **Game over** if breach fills or base health hits zero
-7. Try Again restarts session; Esc pauses during play
+1. Title → Start Defense → Level intro (3.5s)
+2. Waves spawn with level scaling; shoot flyers, bombs, pods, ground units
+3. Wave clear bonus between waves; final wave → boss warning (4s)
+4. Level complete bonus → Next Level (or Campaign Complete after L3)
+5. **Game over** if breach fills or base health hits zero
+6. Base health/breach persist across levels within a run
 
 ### Active systems
 | System | File | Role |
@@ -132,7 +148,8 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 | ThreatSystem | `src/game/systems/ThreatSystem.ts` | Drops, bombs, pods, ground AI |
 | EntityManager | `src/game/systems/EntityManager.ts` | All entity pools |
 | CollisionSystem | `src/game/systems/CollisionSystem.ts` | Multi-layer bullet hits |
-| WaveManager | `src/game/systems/WaveManager.ts` | Flying wave spawns only |
+| LevelManager | `src/game/systems/LevelManager.ts` | Level phases and progression |
+| WaveManager | `src/game/systems/WaveManager.ts` | Per-level timed wave spawns |
 | EconomyManager | `src/game/systems/EconomyManager.ts` | Score, combo |
 | EffectsManager | `src/game/systems/EffectsManager.ts` | VFX + warning markers |
 | Renderer | `src/game/rendering/Renderer.ts` | Full layered draw |
@@ -172,10 +189,9 @@ Defend a planetary base with a stationary turret. Destroy flying aliens, ground 
 
 ### Update order in `Game.update()` (important when extending)
 ```
-input → turret → firing → entities.update (flyers move)
-→ flying drops → waves → collision → prune projectiles
-→ threats (bombs, pods, ground, base damage) → effects → economy
-→ defeat check → shake decay → snapshot
+levelManager.update → (if not combat: early return)
+input → turret → firing → entities.update → flying drops
+→ waves → collision → threats → effects → economy → defeat check → snapshot
 ```
 
 ---
@@ -194,14 +210,14 @@ input → turret → firing → entities.update (flyers move)
 
 ---
 
-## Phase 4 preview (next work)
+## Phase 5 preview (next work)
 
-- [ ] Mothership boss at end of each level
-- [ ] Boss intro warning, multi-phase patterns
-- [ ] Boss health bar in HUD
-- [ ] Level complete flow (before shop in Phase 6)
+- [ ] Playable mothership boss after boss warning
+- [ ] Boss health bar, multi-phase patterns
+- [ ] Credits economy (separate from score)
+- [ ] Boss defeat → level complete → shop (Phase 6)
 
-**Do not start in Phase 4:** shop, credits spending.
+**Do not start in Phase 5:** full shop unless credits are ready.
 
 ---
 

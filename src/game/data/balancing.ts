@@ -48,7 +48,13 @@ export const BALANCING = {
     startDelay: 1.0,
     skyYMin: 90,
     skyYMax: 300,
-    loopFromWave: 4,
+  },
+
+  /** Level progression (Phase 4) */
+  levels: {
+    introDuration: 3.5,
+    bossWarningDuration: 4.0,
+    waveAnnounceDuration: 1.8,
   },
 
   /** Score values */

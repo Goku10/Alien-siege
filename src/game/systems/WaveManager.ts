@@ -1,26 +1,36 @@
 import { BALANCING } from '../data/balancing';
-import { LEVEL_1, type LevelConfig, type WaveConfig } from '../data/levels';
+import type { LevelScaling } from '../data/levelScaling';
+import type { LevelConfig, WaveConfig } from '../data/levels';
 import type { EnemyTypeId, SpawnSide } from '../types';
+
+export interface SpawnModifiers {
+  speedMultiplier: number;
+  healthMultiplier: number;
+  scoreMultiplier: number;
+}
 
 export type SpawnCallback = (
   typeId: EnemyTypeId,
   side: SpawnSide,
-  y?: number,
+  y: number | undefined,
+  modifiers: SpawnModifiers,
 ) => void;
 
 export interface WaveCallbacks {
-  onWaveStart?: (waveNumber: number) => void;
+  onWaveStart?: (waveNumber: number, totalWaves: number) => void;
   onWaveComplete?: (waveNumber: number, clearBonus: number) => void;
+  onLevelWavesComplete?: () => void;
   onSpawn?: SpawnCallback;
 }
 
-type WaveState = 'waiting' | 'spawning' | 'active' | 'between';
+type WaveState = 'idle' | 'between' | 'spawning';
 
 export class WaveManager {
-  private level: LevelConfig = LEVEL_1;
+  private level: LevelConfig | null = null;
+  private scaling: LevelScaling | null = null;
   private waveIndex = 0;
   private waveNumber = 0;
-  private state: WaveState = 'waiting';
+  private state: WaveState = 'idle';
   private waveTimer = 0;
   private spawnIndex = 0;
   private betweenTimer = 0;
@@ -31,36 +41,45 @@ export class WaveManager {
   }
 
   reset(): void {
+    this.level = null;
+    this.scaling = null;
     this.waveIndex = 0;
     this.waveNumber = 0;
-    this.state = 'waiting';
+    this.state = 'idle';
     this.waveTimer = 0;
     this.spawnIndex = 0;
-    this.betweenTimer = BALANCING.waves.startDelay;
+    this.betweenTimer = 0;
   }
 
-  start(): void {
-    this.reset();
+  startLevel(level: LevelConfig, scaling: LevelScaling): void {
+    this.level = level;
+    this.scaling = scaling;
+    this.waveIndex = 0;
+    this.waveNumber = 0;
     this.state = 'between';
     this.betweenTimer = BALANCING.waves.startDelay;
+    this.waveTimer = 0;
+    this.spawnIndex = 0;
   }
 
   getWaveNumber(): number {
     return this.waveNumber;
   }
 
+  getTotalWaves(): number {
+    return this.level?.waves.length ?? 0;
+  }
+
   getState(): WaveState {
     return this.state;
   }
 
-  isSpawningComplete(): boolean {
-    const wave = this.getCurrentWave();
-    if (!wave) return true;
-    return this.spawnIndex >= wave.spawns.length;
+  isActive(): boolean {
+    return this.state !== 'idle' && this.level !== null;
   }
 
-  update(dt: number, aliveEnemyCount: number): void {
-    if (this.state === 'waiting') return;
+  update(dt: number, aliveFlyingCount: number): void {
+    if (!this.level || !this.scaling || this.state === 'idle') return;
 
     if (this.state === 'between') {
       this.betweenTimer -= dt;
@@ -74,56 +93,58 @@ export class WaveManager {
     if (!wave) return;
 
     this.waveTimer += dt;
+    const delayScale = this.scaling.spawnDelayScale;
 
-    while (
-      this.spawnIndex < wave.spawns.length &&
-      wave.spawns[this.spawnIndex].delay <= this.waveTimer
-    ) {
+    while (this.spawnIndex < wave.spawns.length) {
       const spawn = wave.spawns[this.spawnIndex];
+      const scaledDelay = spawn.delay * delayScale;
+      if (scaledDelay > this.waveTimer) break;
+
       const side = this.resolveSide(spawn.side);
-      this.callbacks.onSpawn?.(spawn.enemyType, side, spawn.y);
+      this.callbacks.onSpawn?.(spawn.enemyType, side, spawn.y, {
+        speedMultiplier: this.scaling.speedMultiplier,
+        healthMultiplier: this.scaling.healthMultiplier,
+        scoreMultiplier: this.scaling.scoreMultiplier,
+      });
       this.spawnIndex += 1;
     }
 
     const allSpawned = this.spawnIndex >= wave.spawns.length;
-    if (allSpawned && aliveEnemyCount === 0 && this.state === 'spawning') {
-      this.state = 'active';
+    if (allSpawned && aliveFlyingCount === 0 && this.state === 'spawning') {
       this.completeWave(wave);
     }
   }
 
   private beginWave(): void {
     const wave = this.getCurrentWave();
-    if (!wave) {
-      this.loopWaves();
-      return;
-    }
+    if (!wave || !this.level) return;
 
     this.waveNumber += 1;
     this.waveTimer = 0;
     this.spawnIndex = 0;
     this.state = 'spawning';
-    this.callbacks.onWaveStart?.(this.waveNumber);
+    this.callbacks.onWaveStart?.(this.waveNumber, this.level.waves.length);
   }
 
   private completeWave(wave: WaveConfig): void {
-    this.callbacks.onWaveComplete?.(this.waveNumber, wave.clearBonus);
+    if (!this.scaling) return;
+
+    const bonus = Math.floor(wave.clearBonus * this.scaling.clearBonusScale);
+    this.callbacks.onWaveComplete?.(this.waveNumber, bonus);
     this.waveIndex += 1;
 
-    if (this.waveIndex >= this.level.waves.length) {
-      this.loopWaves();
+    if (this.waveIndex >= (this.level?.waves.length ?? 0)) {
+      this.state = 'idle';
+      this.callbacks.onLevelWavesComplete?.();
+      return;
     }
 
     this.state = 'between';
     this.betweenTimer = BALANCING.waves.betweenWaveDelay;
   }
 
-  private loopWaves(): void {
-    this.waveIndex = BALANCING.waves.loopFromWave - 1;
-  }
-
   private getCurrentWave(): WaveConfig | null {
-    return this.level.waves[this.waveIndex] ?? null;
+    return this.level?.waves[this.waveIndex] ?? null;
   }
 
   private resolveSide(side: SpawnSide | 'random'): SpawnSide {
